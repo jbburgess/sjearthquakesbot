@@ -174,6 +174,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
     Raises:
         Any exceptions encountered when initializing the reddit connection, retrieving subreddit posts, or calling match thread functions.
     '''
+
     now = datetime.datetime.now(datetime.timezone.utc)
 
     # Initialize environmental variables
@@ -231,6 +232,19 @@ def get_schedule(timer: func.TimerRequest) -> None:
 
 # Internal function to retrieve news articles from Earthquakes website.
 def _get_newsarticles():
+    '''
+    Retrieve news articles from Earthquakes website.
+
+    Args:
+        None
+
+    Returns:
+        A list of dictionaries containing the news articles.
+
+    Raises:
+        Any exceptions encountered when retrieving news articles.
+    '''
+
     # Initialize environmental variables.
     base_url = os.environ["NewsSite_BaseURL"]
     news_url = base_url + os.environ["NewsSite_NewsURL"]
@@ -357,7 +371,7 @@ def _get_submissions(name: str, flair: Optional[str] = None, stickied: Optional[
     return submissions
 
 # Internal function to make HTTP requests.
-def _http_request(url, method, data: Optional[dict] = None):
+def _http_request(url, method, data: Optional[dict] = None) -> bytes:
     req = request.Request(url, method = method)
     req.add_header('Content-Type', 'application/json')
 
@@ -374,6 +388,19 @@ def _http_request(url, method, data: Optional[dict] = None):
 
 # Internal function to initialize the reddit connection to the configured subreddit.
 def _init_reddit_connection() -> praw.Reddit:
+    '''
+    Initialize the reddit connection to the configured subreddit.
+
+    Args:
+        None
+
+    Returns:
+        The initialized reddit connection.
+
+    Raises:
+        Any exceptions encountered when initializing the reddit connection.
+    '''
+
     # Initialize environmental variables.
     user_agent = os.environ["Reddit_Connection_UserAgent"]
     client_id = os.environ["Reddit_Connection_ClientID"]
