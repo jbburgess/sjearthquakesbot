@@ -29,12 +29,14 @@ import os
 import sys
 from typing import Optional
 from urllib import request
+from zoneinfo import ZoneInfo
 
 import azure.functions as func
 from bs4 import BeautifulSoup
 from icalendar import Calendar
 import praw
 import requests
+import tzdata
 
 app = func.FunctionApp()
 
@@ -184,9 +186,11 @@ def get_schedule(timer: func.TimerRequest) -> None:
     thread_function_url = os.environ["Reddit_MatchThread_FunctionURL"]
 
     # Retrieve .ics file from website and parse events.
+    logging.debug("Retrieving .ics file from website: %s", schedule_url)
     response = requests.get(schedule_url, timeout = 10)
 
     if response.status_code == 200:
+        logging.debug("Retrieved .ics file")
         ics_data = response.text
         calendar = Calendar.from_ical(ics_data)
         events = []
@@ -205,12 +209,15 @@ def get_schedule(timer: func.TimerRequest) -> None:
 
     # Filter to events happening only in the window of interest.
     if events:
+        logging.debug("Parsed %s events from calendar", len(events))
         yesterday = now + datetime.timedelta(hours = -26, minutes = -2.5)
         tomorrow = now + datetime.timedelta(hours = 12, minutes = 2.5)
         events = [event for event in events if isinstance(event["start"], datetime.datetime) and event["start"] > yesterday and event["start"] < tomorrow]
 
     # Process filtered events and call appropriate match thread functions
     if events:
+        logging.debug("Found events in current window: %s", events)
+        
         # Initialize data to be sent to match thread function
         data = {
             "event": event
@@ -219,17 +226,21 @@ def get_schedule(timer: func.TimerRequest) -> None:
         # Check event time relative to now and call match thread function for appropriate thread type as needed.
         for event in events:
             if event["start"] < now + datetime.timedelta(hours = 12, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 12, minutes = -2.5):
+                logging.debug("Posting prematch thread for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "prematch"
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = 1, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 1, minutes = -2.5):
+                logging.debug("Posting match thread for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "match"
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -2, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -2, minutes = -2.5):
+                logging.debug("Posting postmatch and MOTM threads for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "postmatch"
                 _http_request(thread_function_url, "POST", data)
                 data["type"] = "motm"
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -26, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -26, minutes = -2.5):
+                logging.debug("Unstickying match threads for event: %s, %s", event["summary"], event["start"])
                 _unsticky_match_threads(event)
             else:
                 logging.debug("Event outside of window of interest: %s, %s", event["summary"], event["start"])
@@ -259,12 +270,11 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
                 - motm                
     '''
 
-    logging.info('Python HTTP trigger function processed a request.')
-
     # Retrieve request data.
     req_body = req.get_json()
     event = req_body.get('event')
     thread_type = req_body.get('type')
+    logging.debug('Received request to post %s thread for event: %s, %s', thread_type, event["summary"], event["start"])
 
     # Initialize environmental variables.
     send_replies = os.environ["Reddit_Submission_SendReplies"]
@@ -279,11 +289,11 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("Internal Server Error", status_code = 500)
 
     if thread_type == "prematch":
-        title = "Pre-Match Thread: " + event["summary"]
+        title = "Pre-Match Thread: " + event["summary"] + f' ({event["start"].astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
         flair_id = _get_flair_template("Pre-Match Thread")
         selftext = ""
     elif thread_type == "match":
-        title = "Match Thread: " + event["summary"]
+        title = "Match Thread: " + event["summary"] + f' ({event["start"].astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
         flair_id = _get_flair_template("Match Thread")
 
         if event["description"].startswith("WATCH LIVE NOW: "):
@@ -314,6 +324,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
     }
 
     try:
+        logging.debug('Posting thread with following params: %s', submit_params)
         subreddit.submit(**submit_params)
     except Exception:
         logging.error('Unexpected error when posting match thread (%s): %s', title, sys.exc_info()[0])
@@ -337,6 +348,8 @@ def _get_flair_template(flair_text: str) -> str:
         Any exceptions encountered when initializing the reddit connection or retrieving the flair template.
     '''
 
+    logging.debug('Retrieving flair template: %s', flair_text)
+
     # Initialize environmental variables.
     subreddit = os.environ["Reddit_Subreddit"]
 
@@ -352,6 +365,7 @@ def _get_flair_template(flair_text: str) -> str:
     try:
         flair = subreddit.flair.link_templates
         template = [template for template in flair if template["text"].lower() == flair_text.lower()]
+        logging.debug('Flair template ID for %s retrieved: %s', flair_text, template[0]["id"])
     except:
         logging.error('Unexpected error when retrieving flair template:%s', sys.exc_info()[0])
         raise
@@ -448,6 +462,8 @@ def _get_submissions(name: str, flair: Optional[str] = None, stickied: Optional[
         Any exceptions encountered when initializing the reddit connection or retrieving subreddit posts.
     '''
 
+    logging.debug('Retrieving subreddit posts: name = %s, flair = %s, stickied = %s', name, flair, stickied)
+
     # Initialize environmental variables.
     subreddit = os.environ["Reddit_Subreddit"]
 
@@ -496,6 +512,7 @@ def _get_submissions(name: str, flair: Optional[str] = None, stickied: Optional[
     else:
         logging.error('No subreddit posts retrieved.')
 
+    logging.debug('Subreddit posts filtered to: %s', submissions)
     return submissions
 
 # Internal function to make HTTP requests.
@@ -514,6 +531,8 @@ def _http_request(url, method, data: Optional[dict] = None) -> bytes:
     Raises:
         Any exceptions encountered when making the request.
     '''
+
+    logging.debug('Making HTTP request: url = %s, method = %s, data = %s', url, method, data)
 
     req = request.Request(url, method = method)
     req.add_header('Content-Type', 'application/json')
@@ -553,6 +572,8 @@ def _init_reddit_connection() -> praw.Reddit:
 
     # Connect to reddit
     try:
+        logging.debug('Initializing reddit connection.')
+        
         reddit = praw.Reddit(
             user_agent = user_agent,
             client_id = client_id,
@@ -581,6 +602,8 @@ def _unsticky_match_threads(event):
         Any exceptions encountered when initializing the reddit connection or unstickying match threads.
     '''
 
+    logging.debug('Unstickying match threads for event: %s, %s', event["summary"], event["start"])
+
     # Initialize environmental variables.
     subreddit = os.environ["Reddit_Subreddit"]
 
@@ -595,6 +618,8 @@ def _unsticky_match_threads(event):
     stickied_threads = _get_submissions(event["summary"], flair = "Match", stickied = True)
 
     if stickied_threads:
+        logging.debug('Unstickying match threads: %s', stickied_threads)
+        
         for thread in stickied_threads:
             try:
                 submission = reddit.submission(thread["id"])
