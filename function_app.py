@@ -37,7 +37,6 @@ from icalendar import Calendar
 import praw
 import requests
 import tzdata
-import datetime
 
 app = func.FunctionApp()
 
@@ -189,7 +188,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
     # Retrieve .ics file from website and parse events.
     logging.debug("Retrieving .ics file from website: %s", schedule_url)
     response = requests.get(schedule_url, timeout = 10)
-    
+
 
     if response.status_code == 200:
         logging.debug("Retrieved .ics file")
@@ -236,6 +235,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
                 logging.debug("Posting match thread for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "match"
                 data["stickied"] = True
+                data["suggested_sort"] = "new"
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -2, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -2, minutes = -2.5):
                 logging.debug("Posting postmatch and MOTM threads for event: %s, %s", event["summary"], event["start"])
@@ -244,6 +244,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
                 _http_request(thread_function_url, "POST", data)
                 data["type"] = "motm"
                 data["stickied"] = False
+                data["suggested_sort"] = "new"
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -26, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -26, minutes = -2.5):
                 logging.debug("Unstickying match threads for event: %s, %s", event["summary"], event["start"])
@@ -275,6 +276,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
                 - postmatch
                 - motm
             - stickied: A boolean indicating whether the match thread should be stickied.
+            - suggested_sort: The suggested sort for the match thread, if applicable.
     '''
 
     # Retrieve request data.
@@ -282,6 +284,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
     event = req_body.get('event')
     thread_type = req_body.get('type')
     stickied = req_body.get('stickied')
+    suggested_sort = req_body.get('suggested_sort')
     logging.debug('Received request to post %s thread for event: %s, %s', thread_type, event["summary"], event["start"])
 
     # Initialize environmental variables.
@@ -300,11 +303,11 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("Internal Server Error", status_code = 500)
 
     if thread_type == "prematch":
-        title = "Pre-Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%-I:%M %p")})'
+        title = "Pre-Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
         flair_id = _get_flair_template("Pre Match")
         selftext = ""
     elif thread_type == "match":
-        title = "Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%-I:%M %p")})'
+        title = "Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
         flair_id = _get_flair_template("Match Thread")
 
         if event["description"].startswith("WATCH LIVE NOW: "):
@@ -341,6 +344,14 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
         logging.error('Unexpected error when posting match thread (%s): %s', title, sys.exc_info()[0])
         return func.HttpResponse("Internal Server Error", status_code = 500)
     
+    # Set suggested sort if specified.
+    if suggested_sort:
+        try:
+            submission.mod.suggested_sort(suggested_sort)
+        except Exception:
+            logging.error('Unexpected error when setting suggested sort for match thread (%s): %s', title, sys.exc_info()[0])
+            return func.HttpResponse("Internal Server Error", status_code = 500)
+
     # Sticky match thread if specified.
     if stickied:
         try:
@@ -466,6 +477,50 @@ def _get_newsarticles():
     del results
 
     return articles
+
+# Internal function to retrieve the current MLS standings and team stats.
+def _get_standings() -> dict:
+    '''
+    Retrieve the current MLS standings and team stats.
+
+    Args:
+        None
+
+    Returns:
+        A dictionary containing the current MLS standings and team stats.
+
+    Raises:
+        Any exceptions encountered when retrieving the current MLS standings and team stats.
+    '''
+
+    # Initialize environmental variables.
+    standings_url = os.environ["StatsSite_Standings_URL"]
+
+    # Retrieve current MLS standings and team stats.
+    headers = {"User-Agent": "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.2.8) Gecko/20100722 Firefox/3.6.8 GTB7.1 (.NET CLR 3.5.30729)", "Referer": "http://example.com"}
+    page = requests.get(standings_url, headers=headers, timeout=5)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    standings = soup.find("div", id="all_Regular Season")
+    tables = standings.find_all("table")
+
+    data = []
+
+    # Parse and combine the Eastern and Western Conference standings tables into a single dictionary.
+    for table in tables:
+        if table.attrs['id'].endswith("-Conference_overall"):
+            table_body = table.find('tbody')
+            rows = table_body.find_all('tr')
+
+            for row in rows:
+                entry = []
+                rankcell = row.find('th')
+                entry.append({rankcell.attrs['data-stat']: rankcell.text.strip()})
+                cells = row.find_all('td')
+                for ele in cells:
+                    entry.append({ele.attrs['data-stat']: ele.text.strip()})
+                data.append(entry)
+    
+    return data
 
 # Internal function to retrieve recent posts in subreddit and filter to threads matching the provided name, flair, and stickied status.
 def _get_submissions(name: str, flair: Optional[str] = None, stickied: Optional[bool] = None) -> list:
