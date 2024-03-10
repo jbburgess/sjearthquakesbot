@@ -37,6 +37,7 @@ from icalendar import Calendar
 import praw
 import requests
 import tzdata
+import datetime
 
 app = func.FunctionApp()
 
@@ -188,6 +189,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
     # Retrieve .ics file from website and parse events.
     logging.debug("Retrieving .ics file from website: %s", schedule_url)
     response = requests.get(schedule_url, timeout = 10)
+    
 
     if response.status_code == 200:
         logging.debug("Retrieved .ics file")
@@ -217,7 +219,7 @@ def get_schedule(timer: func.TimerRequest) -> None:
     # Process filtered events and call appropriate match thread functions
     if events:
         logging.debug("Found events in current window: %s", events)
-        
+
         # Initialize data to be sent to match thread function
         data = {
             "event": event
@@ -228,16 +230,20 @@ def get_schedule(timer: func.TimerRequest) -> None:
             if event["start"] < now + datetime.timedelta(hours = 12, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 12, minutes = -2.5):
                 logging.debug("Posting prematch thread for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "prematch"
+                data["stickied"] = True
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = 1, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 1, minutes = -2.5):
                 logging.debug("Posting match thread for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "match"
+                data["stickied"] = True
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -2, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -2, minutes = -2.5):
                 logging.debug("Posting postmatch and MOTM threads for event: %s, %s", event["summary"], event["start"])
                 data["type"] = "postmatch"
+                data["stickied"] = True
                 _http_request(thread_function_url, "POST", data)
                 data["type"] = "motm"
+                data["stickied"] = False
                 _http_request(thread_function_url, "POST", data)
             elif event["start"] < now + datetime.timedelta(hours = -26, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -26, minutes = -2.5):
                 logging.debug("Unstickying match threads for event: %s, %s", event["summary"], event["start"])
@@ -267,18 +273,23 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
                 - prematch
                 - match
                 - postmatch
-                - motm                
+                - motm
+            - stickied: A boolean indicating whether the match thread should be stickied.
     '''
 
     # Retrieve request data.
     req_body = req.get_json()
     event = req_body.get('event')
     thread_type = req_body.get('type')
+    stickied = req_body.get('stickied')
     logging.debug('Received request to post %s thread for event: %s, %s', thread_type, event["summary"], event["start"])
 
     # Initialize environmental variables.
     send_replies = os.environ["Reddit_Submission_SendReplies"]
     subreddit = os.environ["Reddit_Subreddit"]
+
+    # Convert event start time to datetime object.
+    start_datetime = datetime.datetime.fromisoformat(event['start'])
 
     # Connect to subreddit
     try:
@@ -289,11 +300,11 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse("Internal Server Error", status_code = 500)
 
     if thread_type == "prematch":
-        title = "Pre-Match Thread: " + event["summary"] + f' ({event["start"].astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
-        flair_id = _get_flair_template("Pre-Match Thread")
+        title = "Pre-Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%-I:%M %p")})'
+        flair_id = _get_flair_template("Pre Match")
         selftext = ""
     elif thread_type == "match":
-        title = "Match Thread: " + event["summary"] + f' ({event["start"].astimezone(ZoneInfo("America/Los_Angeles")).strftime("%I:%M %p")})'
+        title = "Match Thread: " + event["summary"] + f' ({start_datetime.astimezone(ZoneInfo("America/Los_Angeles")).strftime("%-I:%M %p")})'
         flair_id = _get_flair_template("Match Thread")
 
         if event["description"].startswith("WATCH LIVE NOW: "):
@@ -302,7 +313,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
             selftext = ""
     elif thread_type == "postmatch":
         title = "Post-Match Thread: " + event["summary"]
-        flair_id = _get_flair_template("Post-Match Thread")
+        flair_id = _get_flair_template("Post Match")
         selftext = ""
     elif thread_type == "motm":
         title = "Man of the Match: " + event["summary"]
@@ -325,10 +336,21 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
 
     try:
         logging.debug('Posting thread with following params: %s', submit_params)
-        subreddit.submit(**submit_params)
+        submission = subreddit.submit(**submit_params)
     except Exception:
         logging.error('Unexpected error when posting match thread (%s): %s', title, sys.exc_info()[0])
         return func.HttpResponse("Internal Server Error", status_code = 500)
+    
+    # Sticky match thread if specified.
+    if stickied:
+        try:
+            submission.mod.sticky(state = True, bottom = True)
+        except Exception:
+            logging.error('Unexpected error when stickying match thread (%s): %s', title, sys.exc_info()[0])
+            return func.HttpResponse("Internal Server Error", status_code = 500)
+        else:
+            logging.info('Match thread successfully stickied: %s', title)
+            return func.HttpResponse("Match thread successfully posted and stickied", status_code = 200)
     else:
         logging.info('Match thread successfully posted: %s', title)
         return func.HttpResponse("Match thread successfully posted", status_code = 200)
@@ -538,7 +560,7 @@ def _http_request(url, method, data: Optional[dict] = None) -> bytes:
     req.add_header('Content-Type', 'application/json')
 
     if data:
-        data = json.dumps(data)
+        data = json.dumps(data, default=lambda o: o.isoformat() if isinstance(o, datetime.datetime) else o)
         data = data.encode()
         with request.urlopen(req, data = data) as r:
             content = r.read()
@@ -573,7 +595,7 @@ def _init_reddit_connection() -> praw.Reddit:
     # Connect to reddit
     try:
         logging.debug('Initializing reddit connection.')
-        
+
         reddit = praw.Reddit(
             user_agent = user_agent,
             client_id = client_id,
@@ -619,7 +641,7 @@ def _unsticky_match_threads(event):
 
     if stickied_threads:
         logging.debug('Unstickying match threads: %s', stickied_threads)
-        
+
         for thread in stickied_threads:
             try:
                 submission = reddit.submission(thread["id"])
