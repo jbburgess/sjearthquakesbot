@@ -27,6 +27,7 @@ import json
 import logging
 import os
 import sys
+import time
 from typing import Optional
 from urllib import request
 from zoneinfo import ZoneInfo
@@ -221,38 +222,42 @@ def get_schedule(timer: func.TimerRequest) -> None:
     if events:
         logging.info("Found events in current window: %s", events)
 
-        # Initialize data to be sent to match thread function
-        data = {
-            "event": event
-        }
-
         # Check event time relative to now and call match thread function for appropriate thread type as needed.
         for event in events:
-            if event["start"] < now + datetime.timedelta(hours = 12, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 12, minutes = -2.5):
-                logging.info("Posting prematch thread for event: %s, %s", event["summary"], event["start"])
-                data["type"] = "prematch"
-                data["stickied"] = True
-                _http_request(thread_function_url, "POST", data)
-            elif event["start"] < now + datetime.timedelta(hours = 1, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 1, minutes = -2.5):
-                logging.info("Posting match thread for event: %s, %s", event["summary"], event["start"])
-                data["type"] = "match"
-                data["stickied"] = True
-                data["suggested_sort"] = "new"
-                _http_request(thread_function_url, "POST", data)
-            elif event["start"] < now + datetime.timedelta(hours = -2, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -2, minutes = -2.5):
-                logging.info("Posting postmatch and MOTM threads for event: %s, %s", event["summary"], event["start"])
-                data["type"] = "postmatch"
-                data["stickied"] = True
-                _http_request(thread_function_url, "POST", data)
-                data["type"] = "motm"
-                data["stickied"] = False
-                data["suggested_sort"] = "new"
-                _http_request(thread_function_url, "POST", data)
-            elif event["start"] < now + datetime.timedelta(hours = -26, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -26, minutes = -2.5):
-                logging.info("Unstickying match threads for event: %s, %s", event["summary"], event["start"])
-                _unsticky_match_threads(event)
-            else:
-                logging.info("Event outside of window of interest: %s, %s", event["summary"], event["start"])
+            try:
+                # Initialize data to be sent to match thread function
+                data = {
+                    "event": event
+                }
+                
+                if event["start"] < now + datetime.timedelta(hours = 12, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 12, minutes = -2.5):
+                    logging.info("Posting prematch thread for event: %s, %s", event["summary"], event["start"])
+                    data["type"] = "prematch"
+                    data["stickied"] = True
+                    _http_request(thread_function_url, "POST", data)
+                elif event["start"] < now + datetime.timedelta(hours = 1, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = 1, minutes = -2.5):
+                    logging.info("Posting match thread for event: %s, %s", event["summary"], event["start"])
+                    data["type"] = "match"
+                    data["stickied"] = True
+                    data["suggested_sort"] = "new"
+                    _http_request(thread_function_url, "POST", data)
+                elif event["start"] < now + datetime.timedelta(hours = -2, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -2, minutes = -2.5):
+                    logging.info("Posting postmatch and MOTM threads for event: %s, %s", event["summary"], event["start"])
+                    data["type"] = "postmatch"
+                    data["stickied"] = True
+                    _http_request(thread_function_url, "POST", data)
+                    time.sleep(5)
+                    data["type"] = "motm"
+                    data["stickied"] = False
+                    data["suggested_sort"] = "new"
+                    _http_request(thread_function_url, "POST", data)
+                elif event["start"] < now + datetime.timedelta(hours = -26, minutes = 2.5) and event["start"] > now + datetime.timedelta(hours = -26, minutes = -2.5):
+                    logging.info("Unstickying match threads for event: %s, %s", event["summary"], event["start"])
+                    _unsticky_match_threads(event)
+                else:
+                    logging.info("Event outside of window of interest: %s, %s", event["summary"], event["start"])
+            except:
+                logging.error("Unexpected error when processing event: %s, %s", event["summary"], event["start"])
     else:
         logging.warning("No events found in current window")
 
@@ -289,7 +294,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
     thread_type = req_body.get('type')
     stickied = req_body.get('stickied')
     suggested_sort = req_body.get('suggested_sort')
-    logging.debug('Received request to post %s thread for event: %s, %s', thread_type, event["summary"], event["start"])
+    logging.info('Received request to post %s thread for event: %s, %s', thread_type, event["summary"], event["start"])
 
     # Initialize environmental variables.
     send_replies = os.environ["Reddit_Submission_SendReplies"]
@@ -342,7 +347,7 @@ def post_match_thread(req: func.HttpRequest) -> func.HttpResponse:
     }
 
     try:
-        logging.debug('Posting thread with following params: %s', submit_params)
+        logging.info('Posting thread with following params: %s', submit_params)
         submission = subreddit.submit(**submit_params)
     except Exception:
         logging.error('Unexpected error when posting match thread (%s): %s', title, sys.exc_info()[0])
