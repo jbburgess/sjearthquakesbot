@@ -72,7 +72,7 @@ jobs:
           app-name: 'redditbot-sjearthquakes'
           slot-name: 'dev'
           package: ${{ env.AZURE_FUNCTIONAPP_PACKAGE_PATH }}
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_F000378ABE134EACB26A68F8BF927FF8 }}
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE_DEV }}
           scm-do-build-during-deployment: true
           enable-oryx-build: true
 
