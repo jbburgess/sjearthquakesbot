@@ -164,7 +164,7 @@ def post_news(timer: func.TimerRequest) -> None:
     gc.collect()
 
 # Scheduled Azure Function to check Earthquakes match schedule and trigger match thread Function when needed.
-@app.schedule(schedule="0 */5 22-5,11-15 * * *", arg_name="timer", run_on_startup=False, use_monitor=False)
+@app.schedule(schedule="0 */5 0-5,11-15,22-23 * * *", arg_name="timer", run_on_startup=False, use_monitor=False)
 def get_schedule(timer: func.TimerRequest) -> None:
     '''
     Scheduled Azure Function to check the Earthquakes match schedule and trigger match thread functions when needed.
