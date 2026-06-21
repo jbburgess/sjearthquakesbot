@@ -3,6 +3,9 @@
 /** The kinds of match thread the bot posts, in chronological order. */
 export type ThreadType = 'prematch' | 'match' | 'postmatch' | 'motm';
 
+/** ESPN match status: scheduled (`pre`), in progress (`in`), or finished (`post`). */
+export type MatchState = 'pre' | 'in' | 'post';
+
 /**
  * A normalized match event. Mirrors the fields the old bot relied on
  * (`summary`, `start`, `description`, `location`) plus a stable `id` so the
@@ -18,6 +21,8 @@ export type MatchEvent = {
   summary: string;
   /** Kickoff time as an ISO 8601 string. */
   start: string;
+  /** Current match status from ESPN: `pre`, `in`, or `post` (finished). */
+  state: MatchState;
   /** Optional broadcast/description text; empty when unknown. */
   description: string;
   /** Optional venue text; empty when unknown. */

@@ -21,9 +21,6 @@ export const DEFAULT_FLAIR: Record<ThreadType, string> = {
 /** Flair substring used to identify match-related threads when unstickying. */
 export const MATCH_FLAIR_KEYWORD = 'match';
 
-/** How the body of a thread is generated. */
-type BodyKind = 'none' | 'motm';
-
 interface ThreadConfig {
   /** Prefix prepended to the event summary to build the title. */
   titlePrefix: string;
@@ -35,8 +32,6 @@ interface ThreadConfig {
   sortNew: boolean;
   /** Whether to append the kickoff time to the title. */
   timeSuffix: boolean;
-  /** How to build the selftext body. */
-  body: BodyKind;
 }
 
 /** Per-thread-type behavior, such as title prefix, flair key, and body type. */
@@ -47,7 +42,6 @@ export const THREAD_CONFIG: Record<ThreadType, ThreadConfig> = {
     sticky: true,
     sortNew: false,
     timeSuffix: true,
-    body: 'none',
   },
   match: {
     titlePrefix: 'Match Thread: ',
@@ -55,7 +49,6 @@ export const THREAD_CONFIG: Record<ThreadType, ThreadConfig> = {
     sticky: true,
     sortNew: true,
     timeSuffix: true,
-    body: 'none',
   },
   postmatch: {
     titlePrefix: 'Post-Match Thread: ',
@@ -63,7 +56,6 @@ export const THREAD_CONFIG: Record<ThreadType, ThreadConfig> = {
     sticky: true,
     sortNew: false,
     timeSuffix: false,
-    body: 'none',
   },
   motm: {
     titlePrefix: 'Man of the Match: ',
@@ -71,16 +63,8 @@ export const THREAD_CONFIG: Record<ThreadType, ThreadConfig> = {
     sticky: false,
     sortNew: true,
     timeSuffix: false,
-    body: 'motm',
   },
 };
-
-/** Selftext for Man of the Match threads. */
-export const MOTM_BODY =
-  "One top-level comment for each player. Duplicates will be removed. " +
-  "If there's already a comment for the player you want to nominate, feel free " +
-  'to upvote that and add any additional thoughts in a reply underneath the original comment; ' +
-  'open discussion on nominees is welcome outside of top-level nominations.';
 
 /**
  * Format a kickoff time as `strftime("%I:%M %p")` in the America/Los_Angeles zone, 
@@ -95,6 +79,24 @@ export function formatKickoffTime(iso: string): string {
   }).format(new Date(iso));
 }
 
+/**
+ * Format a kickoff as a full date and time in the America/Los_Angeles zone,
+ * e.g. "Sat, Jul 25, 06:30 PM PT". Returns a placeholder for an empty value.
+ */
+export function formatKickoffDateTime(iso: string): string {
+  if (!iso) return 'TBD';
+  const formatted = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Los_Angeles',
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: true,
+  }).format(new Date(iso));
+  return `${formatted} PT`;
+}
+
 /** Build the thread title for the given type and event. */
 export function buildTitle(type: ThreadType, event: MatchEvent): string {
   const cfg = THREAD_CONFIG[type];
@@ -103,12 +105,4 @@ export function buildTitle(type: ThreadType, event: MatchEvent): string {
     title += ` (${formatKickoffTime(event.start)})`;
   }
   return title;
-}
-
-/** Build the selftext body for the given type and event. */
-export function buildBody(type: ThreadType): string {
-  if (THREAD_CONFIG[type].body === 'motm') {
-    return MOTM_BODY;
-  }
-  return '';
 }

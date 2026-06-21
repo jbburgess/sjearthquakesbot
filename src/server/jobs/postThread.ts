@@ -2,8 +2,10 @@
 
 import { reddit, settings } from '@devvit/web/server';
 import type { PostThreadJobData } from '../../shared/types';
-import { THREAD_CONFIG, DEFAULT_FLAIR, buildTitle, buildBody } from '../../shared/config';
+import { THREAD_CONFIG, DEFAULT_FLAIR, buildTitle } from '../../shared/config';
 import { getFlairTemplateId } from '../reddit';
+import { renderThreadBody } from '../threadBody';
+import { rememberMatchPost } from './updateMatchThread';
 
 /**
  * Submit, flair, sort, and (optionally) sticky a match thread for the given
@@ -16,10 +18,15 @@ export async function handlePostThread(
   const { type, event } = data;
   const cfg = THREAD_CONFIG[type];
   const title = buildTitle(type, event);
-  const text = buildBody(type);
+  const text = await renderThreadBody(type, event);
 
   const post = await reddit.submitPost({ subredditName, title, text });
   console.info(`Posted ${type} thread "${title}" (${post.id})`);
+
+  // Remember the match thread so the live updater can edit it in place.
+  if (type === 'match') {
+    await rememberMatchPost(event.id, post.id);
+  }
 
   // Resolve and apply flair.
   const flairText = ((await settings.get<string>(cfg.flairKey)) ?? '').trim() || DEFAULT_FLAIR[type];

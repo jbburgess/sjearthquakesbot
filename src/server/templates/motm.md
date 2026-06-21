@@ -1,0 +1,1 @@
+One top-level comment for each player. Duplicates will be removed. If there's already a comment for the player you want to nominate, feel free to upvote that and add any additional thoughts in a reply underneath the original comment; open discussion on nominees is welcome outside of top-level nominations.

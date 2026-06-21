@@ -21,6 +21,10 @@
   },
   "scheduler": {
     "tasks": {
+      "check-schedule": {
+        "endpoint": "/internal/scheduler/check-schedule",
+        "cron": "*/1 * * * *"
+      },
       "post-thread": {
         "endpoint": "/internal/scheduler/post-thread"
       },
@@ -32,11 +36,32 @@
   "menu": {
     "items": [
       {
-        "label": "Post test match thread",
-        "description": "Posts a sample pre-match thread to validate the bot",
+        "label": "Post pre-match thread",
+        "description": "Manually post the pre-match thread for the current or next match",
         "forUserType": "moderator",
         "location": "subreddit",
-        "endpoint": "/internal/menu/test-match-thread"
+        "endpoint": "/internal/menu/post-prematch"
+      },
+      {
+        "label": "Post match thread",
+        "description": "Manually post the match thread for the current or next match",
+        "forUserType": "moderator",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/post-match"
+      },
+      {
+        "label": "Post post-match thread",
+        "description": "Manually post the post-match thread for the current or next match",
+        "forUserType": "moderator",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/post-postmatch"
+      },
+      {
+        "label": "Post Man of the Match thread",
+        "description": "Manually post the Man of the Match thread for the current or next match",
+        "forUserType": "moderator",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/post-motm"
       }
     ]
   },
