@@ -9,6 +9,8 @@
 
 import { redis } from '@devvit/web/server';
 import { fetchSchedule } from '../espn';
+import { TRACKED_THREAD_TYPES, threadPostKey } from './threadPosts';
+import { pendingCommentsKey } from './motm';
 
 /** Every action that records a `sched:done:*` dedup marker. */
 const ACTIONS = ['prematch', 'match', 'postmatch', 'motm', 'unsticky'];
@@ -19,6 +21,8 @@ export async function handleResetMarkers(): Promise<number> {
   for (const event of events) {
     const keys = [
       ...ACTIONS.map((action) => `sched:done:${event.id}:${action}`),
+      ...TRACKED_THREAD_TYPES.map((type) => threadPostKey(event.id, type)),
+      pendingCommentsKey(event.id),
       `match:postid:${event.id}`,
       `match:sig:${event.id}`,
     ];

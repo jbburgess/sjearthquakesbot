@@ -9,8 +9,13 @@ import { fetchSchedule } from '../espn';
 import { handlePostThread } from './postThread';
 import { handleUnstickyThreads } from './unstickyThreads';
 import { handleUpdateMatchThread } from './updateMatchThread';
+import { moderateMotmComments, processPendingComments } from './motm';
+import { recallThreadPost } from './threadPosts';
 
 const HOUR = 60 * 60 * 1000;
+
+/** How long the MOTM thread stays actively moderated after kickoff (matches unsticky). */
+const MOTM_WINDOW_MS = 26 * HOUR;
 
 /** The actions performed around a match: the four thread posts plus the unsticky. */
 type ScheduleAction = ThreadType | 'unsticky';
@@ -140,6 +145,29 @@ export async function handleCheckSchedule(subredditName: string): Promise<void> 
       for (const action of MATCH_ENDED_ACTIONS) {
         if (!(await autoCreateEnabled(action))) continue;
         await fireOnce(subredditName, event, action, now);
+      }
+    }
+
+    // Keep posting any nomination comments still queued from the MOTM thread
+    // (rate-limit spillover). Runs every tick regardless of match state — the
+    // queue only exists once the MOTM thread has been posted, and no-ops when
+    // empty — so stragglers reliably drain rather than getting stranded.
+    try {
+      await processPendingComments(event.id);
+    } catch (err) {
+      console.error(`Failed to post queued MOTM comments for ${event.summary}`, err);
+    }
+
+    // During the MOTM thread's active window, keep it tidy by removing any
+    // top-level comments other than the bot's per-player nominations.
+    if (event.state === 'post' && now < kickoff + MOTM_WINDOW_MS) {
+      const motmPostId = await recallThreadPost(event.id, 'motm');
+      if (motmPostId) {
+        try {
+          await moderateMotmComments(motmPostId);
+        } catch (err) {
+          console.error(`Failed to moderate MOTM thread for ${event.summary}`, err);
+        }
       }
     }
   }

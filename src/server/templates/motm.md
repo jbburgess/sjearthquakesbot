@@ -1,1 +1,9 @@
-One top-level comment for each player. Duplicates will be removed. If there's already a comment for the player you want to nominate, feel free to upvote that and add any additional thoughts in a reply underneath the original comment; open discussion on nominees is welcome outside of top-level nominations.
+## {{statusDetail}}: {{score}}
+
+**Vote below for your Man of the Match!**
+
+### Player Performance Summary
+
+{{summary}}
+
+There will be one top-level comment automatically created below for each Quakes player that played in the match. **Any other top-level comments will be removed.** Feel free to add your thoughts in a reply underneath the original comments; open discussion on nominees is welcome outside of top-level nominations.

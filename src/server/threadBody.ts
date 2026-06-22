@@ -6,7 +6,9 @@ import postmatchTemplate from './templates/postmatch.md?raw';
 import motmTemplate from './templates/motm.md?raw';
 import type { MatchEvent, ThreadType } from '../shared/types';
 import { formatKickoffDateTime } from '../shared/config';
+import { resolveTeamId } from './espn';
 import { fetchMatchDetail, type LineupPlayer, type MatchDetail, type TeamLineup } from './matchDetail';
+import { renderPlayerSummary } from './playerStats';
 
 const TEMPLATES: Record<ThreadType, string> = {
   prematch: prematchTemplate,
@@ -138,17 +140,20 @@ function fallbackBody(event: MatchEvent): string {
 }
 
 /**
- * Build the selftext body for a thread of `type`. Pre-match, match, and
- * post-match bodies are rendered from ESPN match detail; the Man of the Match
- * body is static. Falls back to a minimal body if the detail fetch fails.
+ * Build the selftext body for a thread of `type`. All bodies are rendered from
+ * ESPN match detail; the Man of the Match body additionally includes a player
+ * performance summary for the followed team. Falls back to a minimal body if
+ * the detail fetch fails.
  */
 export async function renderThreadBody(type: ThreadType, event: MatchEvent): Promise<string> {
-  if (type === 'motm') {
-    return render(motmTemplate, {});
-  }
   try {
     const detail = await fetchMatchDetail(event.id);
-    return render(TEMPLATES[type], detailVars(detail));
+    const vars = detailVars(detail);
+    if (type === 'motm') {
+      const teamId = await resolveTeamId();
+      vars.summary = renderPlayerSummary(detail, teamId);
+    }
+    return render(TEMPLATES[type], vars);
   } catch (err) {
     console.warn(`Match detail unavailable for ${event.id}; using fallback body`, err);
     return fallbackBody(event);

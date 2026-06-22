@@ -17,7 +17,7 @@ function scheduleUrl(teamId: number): string {
 }
 
 /** Resolve the configured ESPN team id, falling back to the SJ Earthquakes. */
-async function resolveTeamId(): Promise<number> {
+export async function resolveTeamId(): Promise<number> {
   const value = await settings.get<number>(SETTING_KEYS.teamId);
   return typeof value === 'number' && Number.isFinite(value) ? value : DEFAULT_TEAM_ID;
 }

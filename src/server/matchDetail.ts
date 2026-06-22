@@ -35,11 +35,19 @@ export interface LineupPlayer {
   subbedOut: boolean;
   /** Match clock when the player was subbed in (e.g. "83'"), or ''. */
   subbedInAt: string;
+  /** Match clock when the player was subbed out (e.g. "83'"), or ''. */
+  subbedOutAt: string;
+  /** Approximate minutes played, derived from sub timing; '' if they didn't play. */
+  minutes: string;
+  /** Per-stat display values keyed by ESPN stat name (e.g. `totalGoals`). */
+  stats: Record<string, string>;
 }
 
 /** A team's lineup (starters and substitutes). */
 export interface TeamLineup {
   teamName: string;
+  /** ESPN team id, used to match the followed team. */
+  teamId: string;
   homeAway: 'home' | 'away';
   formation: string;
   starters: LineupPlayer[];
@@ -105,6 +113,12 @@ interface EspnPlay {
   substitution?: boolean;
 }
 
+interface EspnStat {
+  name?: string;
+  abbreviation?: string;
+  displayValue?: string;
+}
+
 interface EspnRosterEntry {
   active?: boolean;
   starter?: boolean;
@@ -114,6 +128,7 @@ interface EspnRosterEntry {
   subbedIn?: boolean;
   subbedOut?: boolean;
   plays?: EspnPlay[];
+  stats?: EspnStat[];
 }
 
 interface EspnRoster {
@@ -188,21 +203,55 @@ function toTeamSide(
   };
 }
 
-function toLineup(roster: EspnRoster): TeamLineup {
-  const players: LineupPlayer[] = (roster.roster ?? []).map((p) => ({
-    name: p.athlete?.displayName ?? '',
-    jersey: p.jersey ?? '',
-    position: p.position?.abbreviation ?? '',
-    starter: p.starter === true,
-    subbedIn: p.subbedIn === true,
-    subbedOut: p.subbedOut === true,
-    subbedInAt:
-      p.subbedIn === true
-        ? (p.plays?.find((pl) => pl.substitution === true)?.clock?.displayValue ?? '')
-        : '',
-  }));
+/** Sum the integer groups in an ESPN clock string ("90'+3'" → 93), or 0. */
+function parseClock(display: string): number {
+  const nums = display.match(/\d+/g);
+  return nums ? nums.reduce((sum, n) => sum + Number(n), 0) : 0;
+}
+
+/** Latest minute reached in the match, used to credit minutes played (min 90). */
+function fullTimeMinute(events: EspnKeyEvent[] | undefined): number {
+  const latest = (events ?? []).reduce(
+    (max, e) => Math.max(max, parseClock(e.clock?.displayValue ?? '')),
+    0
+  );
+  return Math.max(latest, 90);
+}
+
+function toLineup(roster: EspnRoster, fullTime: number): TeamLineup {
+  const players: LineupPlayer[] = (roster.roster ?? []).map((p) => {
+    const starter = p.starter === true;
+    const subbedIn = p.subbedIn === true;
+    const subbedOut = p.subbedOut === true;
+    const subClock = p.plays?.find((pl) => pl.substitution === true)?.clock?.displayValue ?? '';
+    const subbedInAt = subbedIn ? subClock : '';
+    const subbedOutAt = subbedOut ? subClock : '';
+    const stats: Record<string, string> = {};
+    for (const s of p.stats ?? []) {
+      if (s.name) stats[s.name] = s.displayValue ?? '';
+    }
+    let minutes = '';
+    if (starter || subbedIn) {
+      const start = subbedIn ? parseClock(subbedInAt) : 0;
+      const end = subbedOut ? parseClock(subbedOutAt) : fullTime;
+      minutes = String(Math.max(0, end - start));
+    }
+    return {
+      name: p.athlete?.displayName ?? '',
+      jersey: p.jersey ?? '',
+      position: p.position?.abbreviation ?? '',
+      starter,
+      subbedIn,
+      subbedOut,
+      subbedInAt,
+      subbedOutAt,
+      minutes,
+      stats,
+    };
+  });
   return {
     teamName: roster.team?.displayName ?? '',
+    teamId: roster.team?.id ?? '',
     homeAway: roster.homeAway === 'home' ? 'home' : 'away',
     formation: roster.formation ?? '',
     starters: players.filter((p) => p.starter),
@@ -266,7 +315,7 @@ export async function fetchMatchDetail(eventId: string): Promise<MatchDetail> {
     statusDetail: statusType?.detail ?? statusType?.shortDetail ?? '',
     home: toTeamSide(home, body.lastFiveGames),
     away: toTeamSide(away, body.lastFiveGames),
-    lineups: (body.rosters ?? []).map(toLineup),
+    lineups: (body.rosters ?? []).map((r) => toLineup(r, fullTimeMinute(body.keyEvents))),
     events: (body.keyEvents ?? []).map(toEventLine).filter((e) => !isGenericDelay(e)),
   };
 }

@@ -1,11 +1,39 @@
 /** Post a single match thread of a given type. */
 
 import { reddit, settings } from '@devvit/web/server';
-import type { PostThreadJobData } from '../../shared/types';
+import type { PostThreadJobData, ThreadType } from '../../shared/types';
 import { THREAD_CONFIG, DEFAULT_FLAIR, buildTitle } from '../../shared/config';
 import { getFlairTemplateId } from '../reddit';
 import { renderThreadBody } from '../threadBody';
+import { fetchMatchDetail } from '../matchDetail';
+import { resolveTeamId } from '../espn';
 import { rememberMatchPost } from './updateMatchThread';
+import { rememberThreadPost, recallThreadPost } from './threadPosts';
+import { enqueuePlayerComments } from './motm';
+
+/** Lock a previously-posted thread of `type` for the event, if its id is known. */
+async function lockThreadPost(eventId: string, type: ThreadType): Promise<void> {
+  const postId = await recallThreadPost(eventId, type);
+  if (!postId) return;
+  try {
+    const post = await reddit.getPostById(postId as `t3_${string}`);
+    await post.lock();
+    console.info(`Locked ${type} thread ${postId}`);
+  } catch (err) {
+    console.error(`Failed to lock ${type} thread ${postId}`, err);
+  }
+}
+
+/** Post the Man-of-the-Match nomination comments for the followed team. */
+async function postMotmComments(eventId: string, postId: string): Promise<void> {
+  try {
+    const detail = await fetchMatchDetail(eventId);
+    const teamId = await resolveTeamId();
+    await enqueuePlayerComments(eventId, postId, detail, teamId);
+  } catch (err) {
+    console.error(`Failed to post MOTM player comments for ${eventId}`, err);
+  }
+}
 
 /**
  * Submit, flair, sort, and (optionally) sticky a match thread for the given
@@ -23,6 +51,8 @@ export async function handlePostThread(
   const post = await reddit.submitPost({ subredditName, title, text });
   console.info(`Posted ${type} thread "${title}" (${post.id})`);
 
+  // Remember the post id so later actions can find and act on this thread.
+  await rememberThreadPost(event.id, type, post.id);
   // Remember the match thread so the live updater can edit it in place.
   if (type === 'match') {
     await rememberMatchPost(event.id, post.id);
@@ -46,5 +76,15 @@ export async function handlePostThread(
   if (cfg.sticky) {
     await post.sticky(2);
     console.info(`Stickied ${type} thread "${title}"`);
+  }
+
+  // Lock the thread whose action window just closed, and seed MOTM nominations.
+  if (type === 'match') {
+    await lockThreadPost(event.id, 'prematch');
+  } else if (type === 'postmatch') {
+    await lockThreadPost(event.id, 'match');
+  } else if (type === 'motm') {
+    await lockThreadPost(event.id, 'match');
+    await postMotmComments(event.id, post.id);
   }
 }
