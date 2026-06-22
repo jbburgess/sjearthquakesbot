@@ -9,6 +9,8 @@ export const SETTING_KEYS = {
   createMatch: 'createMatch',
   createPostMatch: 'createPostMatch',
   createMotm: 'createMotm',
+  prematchLeadHours: 'prematchLeadHours',
+  matchLeadHours: 'matchLeadHours',
   flairPreMatch: 'flairPreMatch',
   flairMatch: 'flairMatch',
   flairPostMatch: 'flairPostMatch',

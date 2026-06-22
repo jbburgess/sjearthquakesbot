@@ -86,6 +86,12 @@
         "helpText": "Whether to automatically create pre-match threads for upcoming matches.",
         "defaultValue": true
       },
+      "prematchLeadHours": {
+        "type": "number",
+        "label": "Pre-match thread lead time (hours)",
+        "helpText": "How many hours before kickoff to post the pre-match thread. Defaults to 12.",
+        "defaultValue": 12
+      },
       "flairPreMatch": {
         "type": "string",
         "label": "Pre-match thread flair text",
@@ -97,6 +103,12 @@
         "label": "Create match threads",
         "helpText": "Whether to automatically create match threads when matches start.",
         "defaultValue": true
+      },
+      "matchLeadHours": {
+        "type": "number",
+        "label": "Match thread lead time (hours)",
+        "helpText": "How many hours before kickoff to post the match thread. Defaults to 1.",
+        "defaultValue": 1
       },
       "flairMatch": {
         "type": "string",

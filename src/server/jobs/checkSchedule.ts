@@ -17,20 +17,18 @@ const HOUR = 60 * 60 * 1000;
 /** Default active window (days) when the setting is unset. */
 const DEFAULT_ACTIVE_WINDOW_DAYS = 1;
 
+/** Default lead times (hours before kickoff) when the settings are unset. */
+const DEFAULT_PREMATCH_LEAD_HOURS = 12;
+const DEFAULT_MATCH_LEAD_HOURS = 1;
+
 /** The actions performed around a match: the four thread posts plus the unsticky. */
 type ScheduleAction = ThreadType | 'unsticky';
 
-/**
- * Fixed offsets (from kickoff) of the actions that fire on a fixed schedule:
- *   prematch → kickoff − 12h
- *   match    → kickoff − 1h
- * The unsticky/lock action instead fires at the end of the configurable active
- * window (see `activeWindowMs`).
- */
-const TIMED_OFFSETS = {
-  prematch: -12 * HOUR,
-  match: -1 * HOUR,
-} satisfies Partial<Record<ScheduleAction, number>>;
+/** Read a positive number setting, falling back to a default when unset/invalid. */
+async function numberSetting(key: string, fallback: number): Promise<number> {
+  const value = await settings.get<number>(key);
+  return typeof value === 'number' && value > 0 ? value : fallback;
+}
 
 /**
  * How long (ms after kickoff) the post-match thread stays stickied and the MOTM
@@ -40,9 +38,8 @@ const TIMED_OFFSETS = {
  * kickoff. An unset or invalid value uses the default.
  */
 async function activeWindowMs(): Promise<number> {
-  const days = await settings.get<number>(SETTING_KEYS.activeWindowDays);
-  const valid = typeof days === 'number' && days > 0 ? days : DEFAULT_ACTIVE_WINDOW_DAYS;
-  return (2 + 24 * valid) * HOUR;
+  const days = await numberSetting(SETTING_KEYS.activeWindowDays, DEFAULT_ACTIVE_WINDOW_DAYS);
+  return (2 + 24 * days) * HOUR;
 }
 
 /**
@@ -129,15 +126,20 @@ async function fireOnce(
 export async function handleCheckSchedule(subredditName: string): Promise<void> {
   const now = Date.now();
   const windowMs = await activeWindowMs();
+  const [prematchLeadHours, matchLeadHours] = await Promise.all([
+    numberSetting(SETTING_KEYS.prematchLeadHours, DEFAULT_PREMATCH_LEAD_HOURS),
+    numberSetting(SETTING_KEYS.matchLeadHours, DEFAULT_MATCH_LEAD_HOURS),
+  ]);
   const events = await fetchSchedule();
   const upcoming = events.filter((e) => isInWindowOfInterest(Date.parse(e.start), now, windowMs));
 
   console.info(`Schedule check: ${events.length} events fetched, ${upcoming.length} in window`);
 
-  // Fixed pre-match/match offsets plus the unsticky/lock at the end of the
-  // configurable active window.
-  const offsets: Record<keyof typeof TIMED_OFFSETS | 'unsticky', number> = {
-    ...TIMED_OFFSETS,
+  // Pre-match/match lead times plus the unsticky/lock
+  // at the end of the active window (all from configuration).
+  const offsets: Record<'prematch' | 'match' | 'unsticky', number> = {
+    prematch: -prematchLeadHours * HOUR,
+    match: -matchLeadHours * HOUR,
     unsticky: windowMs,
   };
 
