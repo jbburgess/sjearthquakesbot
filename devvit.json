@@ -74,6 +74,12 @@
   },
   "settings": {
     "subreddit": {
+      "teamId": {
+        "type": "number",
+        "label": "ESPN team ID",
+        "helpText": "ESPN soccer team ID whose schedule the bot follows (191 = San Jose Earthquakes).",
+        "defaultValue": 191
+      },
       "createPreMatch": {
         "type": "boolean",
         "label": "Create pre-match threads",

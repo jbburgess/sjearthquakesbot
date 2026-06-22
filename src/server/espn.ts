@@ -1,19 +1,26 @@
 /** Fetch and parse the San Jose Earthquakes schedule from the ESPN API. */
 
+import { settings } from '@devvit/web/server';
 import type { MatchEvent, MatchState } from '../shared/types';
+import { SETTING_KEYS } from '../shared/config';
 
-/** ESPN team id for the San Jose Earthquakes. */
-const SJ_TEAM_ID = '191';
-
-/** Public ESPN schedule endpoint for the SJ Earthquakes (MLS, usa.1). */
-export const ESPN_SCHEDULE_URL = `https://site.api.espn.com/apis/site/v2/sports/soccer/usa.1/teams/${SJ_TEAM_ID}/schedule`;
+/** ESPN team id used when the setting is unset (San Jose Earthquakes). */
+const DEFAULT_TEAM_ID = 191;
 
 /**
- * ESPN serves completed and upcoming matches separately: the base URL returns
- * results (past games), and `?fixture=true` returns upcoming fixtures. We fetch
- * both so the schedule covers recently-finished and upcoming matches.
+ * Build the public ESPN schedule endpoint for a team. The `all` pseudo-league
+ * aggregates every competition the team plays in (league, cups, internationals),
+ * so the schedule follows the team regardless of which leagues it competes in.
  */
-const ESPN_FIXTURES_URL = `${ESPN_SCHEDULE_URL}?fixture=true`;
+function scheduleUrl(teamId: number): string {
+  return `https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/${teamId}/schedule`;
+}
+
+/** Resolve the configured ESPN team id, falling back to the SJ Earthquakes. */
+async function resolveTeamId(): Promise<number> {
+  const value = await settings.get<number>(SETTING_KEYS.teamId);
+  return typeof value === 'number' && Number.isFinite(value) ? value : DEFAULT_TEAM_ID;
+}
 
 /** Minimal shapes for the parts of the ESPN response the bot reads. */
 interface EspnCompetitor {
@@ -77,14 +84,18 @@ function toMatchEvent(event: EspnEvent): MatchEvent | null {
 }
 
 /**
- * Fetch the SJ Earthquakes schedule from ESPN and return it as MatchEvents,
+ * Fetch the configured team's schedule from ESPN and return it as MatchEvents,
  * sorted by kickoff time. Combines ESPN's separate results and fixtures feeds
- * (deduped by event id). Throws if a request fails.
+ * (deduped by event id). The base URL returns results (past games) and
+ * `?fixture=true` returns upcoming fixtures, so fetching both covers
+ * recently-finished and upcoming matches. Throws if a request fails.
  */
 export async function fetchSchedule(): Promise<MatchEvent[]> {
+  const teamId = await resolveTeamId();
+  const baseUrl = scheduleUrl(teamId);
   const [results, fixtures] = await Promise.all([
-    fetchEvents(ESPN_SCHEDULE_URL),
-    fetchEvents(ESPN_FIXTURES_URL),
+    fetchEvents(baseUrl),
+    fetchEvents(`${baseUrl}?fixture=true`),
   ]);
 
   const byId = new Map<string, MatchEvent>();

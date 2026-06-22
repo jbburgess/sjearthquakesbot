@@ -12,7 +12,7 @@
 
 ---
 
-### Form
+### FORM
 
 | Team | Record (W-D-L) | Points | Last 5 |
 |------|:--------------:|:------:|:------:|
@@ -21,7 +21,7 @@
 
 ---
 
-### Lineups
+### LINEUPS
 
 {{lineups}}
 

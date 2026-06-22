@@ -209,6 +209,17 @@ function toEventLine(event: EspnKeyEvent): MatchEventLine {
   };
 }
 
+/**
+ * ESPN emits two events for most delays: a generic "Start Delay"/"End Delay"
+ * (whose text matches its type) alongside a more descriptive one. Drop the
+ * generic duplicates so only the descriptive event remains.
+ */
+function isGenericDelay(line: MatchEventLine): boolean {
+  const type = line.type.trim().toLowerCase();
+  if (type !== 'start delay' && type !== 'end delay') return false;
+  return line.text.trim().toLowerCase() === type;
+}
+
 function findReferee(officials: EspnOfficial[] | undefined): string {
   const ref = officials?.find((o) => o.position?.name === 'Referee') ?? officials?.[0];
   return ref?.fullName ?? '';
@@ -244,6 +255,6 @@ export async function fetchMatchDetail(eventId: string): Promise<MatchDetail> {
     home: toTeamSide(home, body.lastFiveGames),
     away: toTeamSide(away, body.lastFiveGames),
     lineups: (body.rosters ?? []).map(toLineup),
-    events: (body.keyEvents ?? []).map(toEventLine),
+    events: (body.keyEvents ?? []).map(toEventLine).filter((e) => !isGenericDelay(e)),
   };
 }

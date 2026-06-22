@@ -51,8 +51,9 @@ function renderLineups(detail: MatchDetail): string {
 }
 
 /** Pick an emoji representing a key-event type (goal, card, sub, etc.). */
-function eventEmoji(type: string): string {
+function eventEmoji(type: string, text = ''): string {
   const t = type.toLowerCase();
+  const x = text.toLowerCase();
   if (t.includes('miss') || t.includes('saved')) return '❌';
   if (t.includes('goal') || t.includes('penalty')) return '⚽';
   if (t.includes('yellow') && t.includes('red')) return '🟨🟥';
@@ -60,6 +61,12 @@ function eventEmoji(type: string): string {
   if (t.includes('yellow')) return '🟨';
   if (t.includes('sub')) return '🔄';
   if (t.includes('var')) return '📺';
+  // Delays: pick a specific emoji from the text, defaulting to a stopwatch.
+  if (t.includes('delay')) {
+    if (x.includes('drink')) return '🥤';
+    if (x.includes('injur')) return '🤕';
+    return '⏱️';
+  }
   // Period boundaries: kickoff, halftime, start of 2nd half, end of regulation.
   if (t.includes('kickoff') || t.includes('half') || t.includes('time')) return '⏱️';
   return '';
@@ -80,7 +87,7 @@ function renderEvents(detail: MatchDetail): string {
   return detail.events
     .map((e) => {
       const minute = `**${e.minute || "0'"}** `;
-      const emoji = eventEmoji(e.type);
+      const emoji = eventEmoji(e.type, e.text);
       const prefix = emoji ? `${emoji} ` : '';
       const text = e.scoring ? `**${e.text}**` : e.text;
       const team = e.team ? ` *(${e.team})*` : '';

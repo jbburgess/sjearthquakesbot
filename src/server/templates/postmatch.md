@@ -8,13 +8,13 @@
 
 ---
 
-### Lineups
+### LINEUPS
 
 {{lineups}}
 
 ---
 
-### Match Events
+### MATCH EVENTS
 
 {{events}}
 

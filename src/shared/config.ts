@@ -4,6 +4,7 @@ import type { MatchEvent, ThreadType } from './types';
 
 /** Subreddit-scoped setting keys (declared in devvit.json, editable by mods). */
 export const SETTING_KEYS = {
+  teamId: 'teamId',
   createPreMatch: 'createPreMatch',
   createMatch: 'createMatch',
   createPostMatch: 'createPostMatch',
