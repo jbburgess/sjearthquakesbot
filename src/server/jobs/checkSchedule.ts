@@ -11,6 +11,7 @@ import { handleUnstickyThreads } from './unstickyThreads';
 import { handleUpdateMatchThread } from './updateMatchThread';
 import { moderateMotmComments, processPendingComments } from './motm';
 import { recallThreadPost } from './threadPosts';
+import { handleTicketThread } from './ticketThread';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -196,5 +197,14 @@ export async function handleCheckSchedule(subredditName: string): Promise<void> 
         }
       }
     }
+  }
+
+  // Maintain the monthly ticket thread (top sticky), independent of any single
+  // match. Uses the full schedule so it can time each month against the
+  // previous month's final match.
+  try {
+    await handleTicketThread(subredditName, events, now);
+  } catch (err) {
+    console.error('Failed to maintain the ticket thread', err);
   }
 }

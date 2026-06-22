@@ -15,6 +15,8 @@ export const SETTING_KEYS = {
   flairMatch: 'flairMatch',
   flairPostMatch: 'flairPostMatch',
   flairMotm: 'flairMotm',
+  createTicketThread: 'createTicketThread',
+  flairTicket: 'flairTicket',
   lockInactiveThreads: 'lockInactiveThreads',
   activeWindowDays: 'activeWindowDays',
 } as const;

@@ -14,6 +14,8 @@ import { handleUnstickyThreads } from './jobs/unstickyThreads';
 import { handleCheckSchedule } from './jobs/checkSchedule';
 import { handleManualPost } from './jobs/manualThread';
 import { handleResetMarkers } from './jobs/resetMarkers';
+import { handleManualTicketPost, handleManualTicketUnsticky } from './jobs/ticketThread';
+import { fetchSchedule } from './espn';
 
 const app = new Hono();
 
@@ -116,6 +118,56 @@ registerManualPost('/internal/menu/post-prematch', 'prematch');
 registerManualPost('/internal/menu/post-match', 'match');
 registerManualPost('/internal/menu/post-postmatch', 'postmatch');
 registerManualPost('/internal/menu/post-motm', 'motm');
+
+// Moderator menu action: post or refresh the monthly ticket thread for the
+// currently-relevant month (replacing any existing one).
+app.post('/internal/menu/post-ticket', async (c) => {
+  void (await c.req.json<MenuItemRequest>());
+  try {
+    const events = await fetchSchedule();
+    const result = await handleManualTicketPost(context.subredditName, events);
+    const text =
+      result.status === 'posted'
+        ? `Posted ticket thread for ${result.month}`
+        : `No home matches in ${result.month}; unstickied the previous ticket thread`;
+    return c.json<UiResponse>(
+      { showToast: { text, appearance: result.status === 'posted' ? 'success' : 'neutral' } },
+      200
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Failed to post ticket thread:', message, err);
+    return c.json<UiResponse>(
+      { showToast: { text: `Failed: ${message || 'unknown error'}`, appearance: 'neutral' } },
+      200
+    );
+  }
+});
+
+// Moderator menu action: unsticky the current ticket thread and skip the month.
+app.post('/internal/menu/unsticky-ticket', async (c) => {
+  void (await c.req.json<MenuItemRequest>());
+  try {
+    const events = await fetchSchedule();
+    const result = await handleManualTicketUnsticky(events);
+    return c.json<UiResponse>(
+      {
+        showToast: {
+          text: `Unstickied the ticket thread and skipped ${result.month}`,
+          appearance: 'success',
+        },
+      },
+      200
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Failed to unsticky ticket thread:', message, err);
+    return c.json<UiResponse>(
+      { showToast: { text: `Failed: ${message || 'unknown error'}`, appearance: 'neutral' } },
+      200
+    );
+  }
+});
 
 // Dev-only: clear the Redis dedup/bookkeeping markers so threads can be
 // re-posted during testing. Remove or restrict before production cutover.

@@ -23,13 +23,19 @@ manual effort from the mod team.
   performance summary table, then adds one nomination comment per player who featured so
   members can upvote their pick. The thread is kept tidy by removing stray top-level
   comments during its active voting window.
+- **Monthly ticket threads** — posts and top-stickies a ticket thread each month that links
+  to the official ticket marketplace and lists the month's home matches (with notes for cup
+  ties or matches played away from PayPal Park). A new month's thread replaces the previous
+  one, posting after the prior month's final match concludes so the old thread stays useful
+  until then. Months with no home matches are skipped, un-stickying the previous thread
+  instead — gracefully covering the offseason and long mid-season breaks.
 - **Thread housekeeping** — applies the correct link flair to each thread, stickies and
   later un-stickies threads at the right times, and (optionally) locks each thread once its
   active window has passed.
 
 Schedule and match data is sourced from ESPN, and club news from the official San Jose
-Earthquakes website. Moderators can also post any match thread on demand from the subreddit
-menu, and toggle each thread type on or off in the app's settings.
+Earthquakes website. Moderators can also post any threads on demand from the subreddit
+menu and toggle each thread type on or off in the app's settings.
 
 ## Configuration
 
@@ -37,6 +43,7 @@ The bot exposes subreddit-level settings so moderators can tailor its behavior:
 
 - The ESPN team ID to follow (defaults to `191`, the San Jose Earthquakes).
 - Toggles to enable or disable automatic match thread creation.
+- A toggle to enable or disable the monthly ticket thread, plus its link flair text.
 - The link flair to apply to each thread type.
 - How many hours before kickoff the pre-match and match threads are posted.
 - Whether to lock each match thread once its active window has passed.
@@ -63,5 +70,5 @@ limitations. They will be added as the platform gains support:
   read-only), so native polls can't be created by an app today.
 - **Game-day community status** — Being able to automatically set the subreddit's community
   status bubble (e.g. "Match Day! Quakes vs. Portland 7:30 PM PT") around each match would 
-  be a nice-to-have. Devvit currently exposes no API to read or set the community status,
+  be a nice-to-have. Devvit currently exposes no API to set the community status,
   so this would still have to be done manually.

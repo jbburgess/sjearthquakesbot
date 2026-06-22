@@ -64,6 +64,20 @@
         "endpoint": "/internal/menu/post-motm"
       },
       {
+        "label": "Post/refresh ticket thread",
+        "description": "Post or refresh the monthly ticket thread for the current relevant month",
+        "forUserType": "moderator",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/post-ticket"
+      },
+      {
+        "label": "Unsticky ticket thread (skip month)",
+        "description": "Unsticky the current ticket thread and skip the relevant month",
+        "forUserType": "moderator",
+        "location": "subreddit",
+        "endpoint": "/internal/menu/unsticky-ticket"
+      },
+      {
         "label": "Reset thread markers (dev)",
         "description": "Clear dedup markers so match threads can be re-posted during testing",
         "forUserType": "moderator",
@@ -139,6 +153,18 @@
         "label": "Man of the Match thread flair text",
         "helpText": "Exact text of the link flair to apply to Man of the Match threads.",
         "defaultValue": "Man of the Match"
+      },
+      "createTicketThread": {
+        "type": "boolean",
+        "label": "Create monthly ticket threads",
+        "helpText": "Whether to automatically create and sticky a monthly ticket thread for months with home matches.",
+        "defaultValue": true
+      },
+      "flairTicket": {
+        "type": "string",
+        "label": "Ticket thread flair text",
+        "helpText": "Exact text of the link flair to apply to the monthly ticket thread.",
+        "defaultValue": "Ticket Thread"
       },
       "lockInactiveThreads": {
         "type": "boolean",

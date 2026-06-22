@@ -27,6 +27,16 @@ export type MatchEvent = {
   description: string;
   /** Optional venue text; empty when unknown. */
   location: string;
+  /** Whether the followed team is the home side for this fixture. */
+  isHome: boolean;
+  /** The opposing team's display name; empty when unknown. */
+  opponent: string;
+  /**
+   * Competition label for non–regular-season fixtures (e.g. "U.S. Open Cup",
+   * "MLS Cup Playoffs"); empty string for MLS regular-season matches. Used to
+   * annotate the monthly ticket thread's home-match table.
+   */
+  competition: string;
 };
 
 /** Payload delivered to the `post-thread` scheduler endpoint. */

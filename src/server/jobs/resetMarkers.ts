@@ -11,6 +11,7 @@ import { redis } from '@devvit/web/server';
 import { fetchSchedule } from '../espn';
 import { TRACKED_THREAD_TYPES, threadPostKey } from './threadPosts';
 import { pendingCommentsKey } from './motm';
+import { clearTicketState } from './ticketThread';
 
 /** Every action that records a `sched:done:*` dedup marker. */
 const ACTIONS = ['prematch', 'match', 'postmatch', 'motm', 'unsticky'];
@@ -28,5 +29,6 @@ export async function handleResetMarkers(): Promise<number> {
     ];
     await redis.del(...keys);
   }
+  await clearTicketState();
   return events.length;
 }
