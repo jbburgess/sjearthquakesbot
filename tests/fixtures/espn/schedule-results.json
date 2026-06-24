@@ -1,0 +1,40 @@
+{
+  "events": [
+    {
+      "id": "402",
+      "date": "2026-05-17T19:00Z",
+      "name": "San Jose Earthquakes at Portland Timbers",
+      "league": { "name": "MLS", "isTournament": false },
+      "seasonType": { "name": "Regular Season" },
+      "competitions": [
+        {
+          "venue": { "fullName": "Providence Park" },
+          "status": { "type": { "state": "post" } },
+          "broadcasts": [{ "media": { "shortName": "MLS Season Pass" } }],
+          "competitors": [
+            { "homeAway": "home", "team": { "id": "188", "displayName": "Portland Timbers" } },
+            { "homeAway": "away", "team": { "id": "191", "displayName": "San Jose Earthquakes" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401",
+      "date": "2026-05-24T02:30Z",
+      "name": "LA Galaxy at San Jose Earthquakes",
+      "league": { "name": "MLS", "isTournament": false },
+      "seasonType": { "name": "Regular Season" },
+      "competitions": [
+        {
+          "venue": { "fullName": "PayPal Park" },
+          "status": { "type": { "state": "post" } },
+          "broadcasts": [{ "media": { "shortName": "MLS Season Pass" } }],
+          "competitors": [
+            { "homeAway": "home", "team": { "id": "191", "displayName": "San Jose Earthquakes" } },
+            { "homeAway": "away", "team": { "id": "187", "displayName": "LA Galaxy" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

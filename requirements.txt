@@ -1,6 +1,0 @@
-azure-functions
-BeautifulSoup4
-icalendar
-praw
-requests
-tzdata

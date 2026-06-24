@@ -1,0 +1,155 @@
+{
+  "header": {
+    "league": { "name": "MLS" },
+    "competitions": [
+      {
+        "date": "2026-05-24T02:30Z",
+        "status": { "type": { "state": "post", "detail": "FT", "shortDetail": "FT" } },
+        "competitors": [
+          {
+            "homeAway": "home",
+            "score": "2",
+            "team": { "id": "191", "displayName": "San Jose Earthquakes" },
+            "record": [
+              { "type": "total", "summary": "10-4-3" },
+              { "type": "points", "summary": "33" }
+            ]
+          },
+          {
+            "homeAway": "away",
+            "score": "1",
+            "team": { "id": "187", "displayName": "LA Galaxy" },
+            "record": [
+              { "type": "total", "summary": "8-6-4" },
+              { "type": "points", "summary": "28" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "gameInfo": {
+    "venue": { "fullName": "PayPal Park" },
+    "officials": [
+      { "fullName": "Jair Marrufo", "position": { "name": "Referee" } },
+      { "fullName": "Corey Parker", "position": { "name": "Assistant Referee" } }
+    ]
+  },
+  "broadcasts": [{ "media": { "shortName": "MLS Season Pass" } }],
+  "rosters": [
+    {
+      "homeAway": "home",
+      "formation": "4-3-3",
+      "team": { "id": "191", "displayName": "San Jose Earthquakes" },
+      "roster": [
+        {
+          "starter": true,
+          "jersey": "11",
+          "athlete": { "displayName": "Antony" },
+          "position": { "abbreviation": "F" },
+          "stats": [
+            { "name": "totalGoals", "displayValue": "1" },
+            { "name": "goalAssists", "displayValue": "0" },
+            { "name": "totalShots", "displayValue": "3" },
+            { "name": "shotsOnTarget", "displayValue": "2" }
+          ]
+        },
+        {
+          "starter": true,
+          "jersey": "9",
+          "athlete": { "displayName": "Cristian Espinoza" },
+          "position": { "abbreviation": "M" },
+          "subbedOut": true,
+          "plays": [{ "substitution": true, "clock": { "displayValue": "83'" } }],
+          "stats": [
+            { "name": "totalGoals", "displayValue": "0" },
+            { "name": "goalAssists", "displayValue": "1" },
+            { "name": "totalShots", "displayValue": "1" }
+          ]
+        },
+        {
+          "starter": false,
+          "jersey": "20",
+          "athlete": { "displayName": "Preston Judd" },
+          "position": { "abbreviation": "F" },
+          "subbedIn": true,
+          "plays": [{ "substitution": true, "clock": { "displayValue": "83'" } }],
+          "stats": [{ "name": "totalGoals", "displayValue": "0" }]
+        },
+        {
+          "starter": false,
+          "jersey": "30",
+          "athlete": { "displayName": "Benji Kikanovic" },
+          "position": { "abbreviation": "M" },
+          "stats": []
+        }
+      ]
+    },
+    {
+      "homeAway": "away",
+      "formation": "4-2-3-1",
+      "team": { "id": "187", "displayName": "LA Galaxy" },
+      "roster": [
+        {
+          "starter": true,
+          "jersey": "7",
+          "athlete": { "displayName": "Riqui Puig" },
+          "position": { "abbreviation": "M" },
+          "stats": [{ "name": "totalGoals", "displayValue": "1" }]
+        }
+      ]
+    }
+  ],
+  "keyEvents": [
+    {
+      "type": { "text": "Goal" },
+      "period": { "number": 1 },
+      "clock": { "displayValue": "45'+2'" },
+      "scoringPlay": true,
+      "team": { "displayName": "San Jose Earthquakes" },
+      "text": "Goal! Antony scores.",
+      "shortText": "Goal - Antony"
+    },
+    {
+      "type": { "text": "Start Delay" },
+      "period": { "number": 2 },
+      "clock": { "displayValue": "70'" },
+      "scoringPlay": false,
+      "team": { "displayName": "" },
+      "text": "Start Delay"
+    },
+    {
+      "type": { "text": "Start Delay" },
+      "period": { "number": 2 },
+      "clock": { "displayValue": "70'" },
+      "scoringPlay": false,
+      "team": { "displayName": "" },
+      "text": "Cooling break"
+    },
+    {
+      "type": { "text": "Goal" },
+      "period": { "number": 2 },
+      "clock": { "displayValue": "90'+3'" },
+      "scoringPlay": true,
+      "team": { "displayName": "San Jose Earthquakes" },
+      "text": "Goal! Preston Judd scores.",
+      "shortText": "Goal - Judd"
+    }
+  ],
+  "lastFiveGames": [
+    {
+      "team": { "id": "191" },
+      "events": [
+        { "gameResult": "W" },
+        { "gameResult": "W" },
+        { "gameResult": "L" },
+        { "gameResult": "D" },
+        { "gameResult": "L" }
+      ]
+    },
+    {
+      "team": { "id": "187" },
+      "events": [{ "gameResult": "L" }, { "gameResult": "D" }]
+    }
+  ]
+}

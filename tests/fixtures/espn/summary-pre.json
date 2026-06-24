@@ -1,0 +1,41 @@
+{
+  "header": {
+    "league": { "name": "MLS" },
+    "competitions": [
+      {
+        "date": "2026-07-25T02:30Z",
+        "status": { "type": { "state": "pre", "detail": "Sat, July 25th at 7:30 PM PDT" } },
+        "competitors": [
+          {
+            "homeAway": "home",
+            "team": { "id": "191", "displayName": "San Jose Earthquakes" },
+            "record": [
+              { "type": "total", "summary": "10-4-3" },
+              { "type": "points", "summary": "33" }
+            ]
+          },
+          {
+            "homeAway": "away",
+            "team": { "id": "9726", "displayName": "Seattle Sounders FC" },
+            "record": [
+              { "type": "total", "summary": "9-5-3" },
+              { "type": "points", "summary": "30" }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "gameInfo": {
+    "venue": { "fullName": "PayPal Park" }
+  },
+  "broadcasts": [{ "media": { "shortName": "Paramount+" } }],
+  "rosters": [],
+  "keyEvents": [],
+  "lastFiveGames": [
+    {
+      "team": { "id": "191" },
+      "events": [{ "gameResult": "W" }, { "gameResult": "W" }, { "gameResult": "L" }]
+    }
+  ]
+}

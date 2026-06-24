@@ -137,6 +137,7 @@ __azurite_db*__.json
 # Node / Devvit
 node_modules/
 dist/
+coverage/
 .devvit/
 *.tsbuildinfo
 .env

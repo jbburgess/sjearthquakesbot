@@ -1,0 +1,56 @@
+{
+  "events": [
+    {
+      "id": "402",
+      "date": "2026-05-17T19:00Z",
+      "name": "San Jose Earthquakes at Portland Timbers",
+      "league": { "name": "MLS", "isTournament": false },
+      "seasonType": { "name": "Regular Season" },
+      "competitions": [
+        {
+          "venue": { "fullName": "Providence Park" },
+          "status": { "type": { "state": "post" } },
+          "competitors": [
+            { "homeAway": "home", "team": { "id": "188", "displayName": "Portland Timbers" } },
+            { "homeAway": "away", "team": { "id": "191", "displayName": "San Jose Earthquakes" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "403",
+      "date": "2026-07-25T02:30Z",
+      "name": "Seattle Sounders FC at San Jose Earthquakes",
+      "league": { "name": "U.S. Open Cup", "isTournament": true },
+      "seasonType": { "name": "Cup" },
+      "competitions": [
+        {
+          "venue": { "fullName": "PayPal Park" },
+          "status": { "type": { "state": "pre" } },
+          "broadcasts": [{ "media": { "shortName": "Paramount+" } }],
+          "competitors": [
+            { "homeAway": "home", "team": { "id": "191", "displayName": "San Jose Earthquakes" } },
+            { "homeAway": "away", "team": { "id": "9726", "displayName": "Seattle Sounders FC" } }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "404",
+      "date": "2026-08-01T02:30Z",
+      "name": "San Jose Earthquakes at Vancouver Whitecaps FC",
+      "league": { "name": "MLS", "isTournament": false },
+      "seasonType": { "name": "MLS Cup Playoffs" },
+      "competitions": [
+        {
+          "venue": { "fullName": "BC Place" },
+          "status": { "type": { "state": "pre" } },
+          "competitors": [
+            { "homeAway": "home", "team": { "id": "9727", "displayName": "Vancouver Whitecaps FC" } },
+            { "homeAway": "away", "team": { "id": "191", "displayName": "San Jose Earthquakes" } }
+          ]
+        }
+      ]
+    }
+  ]
+}

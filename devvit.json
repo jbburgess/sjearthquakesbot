@@ -113,17 +113,29 @@
         "helpText": "How many hours before kickoff to post the pre-match thread. Defaults to 12.",
         "defaultValue": 12
       },
-      "flairPreMatch": {
-        "type": "string",
-        "label": "Pre-match thread flair text",
-        "helpText": "Exact text of the link flair to apply to pre-match threads.",
-        "defaultValue": "Pre Match"
-      },
       "matchLeadHours": {
         "type": "number",
         "label": "Match thread lead time (hours)",
         "helpText": "How many hours before kickoff to post the match thread. Defaults to 1.",
         "defaultValue": 1
+      },
+      "activeWindowDays": {
+        "type": "number",
+        "label": "Post-match active window (days)",
+        "helpText": "How many days to keep the post-match thread stickied and the MOTM thread moderated before unstickying and potentially locking both. Defaults to 1 day.",
+        "defaultValue": 1
+      },
+      "lockInactiveThreads": {
+        "type": "boolean",
+        "label": "Lock inactive match threads",
+        "helpText": "Whether to lock each match thread once its active window has passed (pre-match once the match thread posts, match once the post-match/MOTM threads post, and post-match/MOTM at the end of their active window).",
+        "defaultValue": true
+      },
+      "flairPreMatch": {
+        "type": "string",
+        "label": "Pre-match thread flair text",
+        "helpText": "Exact text of the link flair to apply to pre-match threads.",
+        "defaultValue": "Pre Match"
       },
       "flairMatch": {
         "type": "string",
@@ -148,18 +160,6 @@
         "label": "Ticket thread flair text",
         "helpText": "Exact text of the link flair to apply to the monthly ticket thread.",
         "defaultValue": "Ticket Thread"
-      },
-      "lockInactiveThreads": {
-        "type": "boolean",
-        "label": "Lock inactive match threads",
-        "helpText": "Whether to lock each match thread once its active window has passed (pre-match once the match thread posts, match once the post-match/MOTM threads post, and post-match/MOTM at the end of their active window).",
-        "defaultValue": true
-      },
-      "activeWindowDays": {
-        "type": "number",
-        "label": "Post-match active window (days)",
-        "helpText": "How many days to keep the post-match thread stickied and the MOTM thread moderated before unstickying and potentially locking both. Defaults to 1 day.",
-        "defaultValue": 1
       }
     }
   },
