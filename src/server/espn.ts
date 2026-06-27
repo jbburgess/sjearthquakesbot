@@ -86,15 +86,16 @@ function opponentName(event: EspnEvent, teamId: number): string {
 }
 
 /**
- * Competition label for non–regular-season fixtures, or '' for MLS regular
- * season. Tournaments (e.g. U.S. Open Cup) use the league name; non-regular MLS
- * fixtures (e.g. playoffs) use the season-type name.
+ * Competition label for non-standard fixtures, or '' for MLS regular season.
+ * A non-MLS league (e.g. "U.S. Open Cup") uses the league name; an MLS fixture
+ * outside the regular season (e.g. "MLS Cup Playoffs") uses the season-type name.
  */
 function competitionLabel(event: EspnEvent): string {
+  const league = event.league?.name ?? '';
   const seasonType = event.seasonType?.name ?? '';
-  if (seasonType === 'Regular Season') return '';
-  if (event.league?.isTournament) return event.league.name ?? seasonType;
-  return seasonType || (event.league?.name ?? '');
+  if (league && league !== 'MLS') return league;
+  if (seasonType && seasonType !== 'Regular Season') return seasonType;
+  return '';
 }
 
 /** Convert one ESPN event into the normalized MatchEvent shape, or null if unusable. */

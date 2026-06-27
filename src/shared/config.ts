@@ -125,6 +125,9 @@ export function formatKickoffDateTime(iso: string): string {
 export function buildTitle(type: ThreadType, event: MatchEvent): string {
   const cfg = THREAD_CONFIG[type];
   let title = cfg.titlePrefix + event.summary;
+  if (event.competition) {
+    title += ` | ${event.competition}`;
+  }
   if (cfg.timeSuffix) {
     title += ` (${formatKickoffTime(event.start)})`;
   }

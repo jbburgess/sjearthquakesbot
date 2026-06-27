@@ -77,4 +77,18 @@ describe('buildTitle', () => {
       'Man of the Match: San Jose Earthquakes vs Portland Timbers'
     );
   });
+
+  test('notes a non-standard competition before the kickoff time', () => {
+    const cup = makeMatchEvent({
+      summary: 'San Jose Earthquakes vs Seattle Sounders FC',
+      start: '2026-07-25T02:30:00.000Z',
+      competition: 'U.S. Open Cup',
+    });
+    expect(buildTitle('match', cup)).toBe(
+      'Match Thread: San Jose Earthquakes vs Seattle Sounders FC | U.S. Open Cup (07:30 PM)'
+    );
+    expect(buildTitle('postmatch', cup)).toBe(
+      'Post-Match Thread: San Jose Earthquakes vs Seattle Sounders FC | U.S. Open Cup'
+    );
+  });
 });
