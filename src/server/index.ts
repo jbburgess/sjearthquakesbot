@@ -13,6 +13,7 @@ import { handlePostThread } from './jobs/postThread';
 import { handleUnstickyThreads } from './jobs/unstickyThreads';
 import { handleCheckSchedule } from './jobs/checkSchedule';
 import { handleManualPost } from './jobs/manualThread';
+import { handlePostNews } from './jobs/postNews';
 import { handleResetMarkers } from './jobs/resetMarkers';
 import { handleManualTicketPost, handleManualTicketUnsticky } from './jobs/ticketThread';
 import { fetchSchedule } from './espn';
@@ -57,6 +58,18 @@ app.post('/internal/scheduler/check-schedule', async (c) => {
     return c.json<TaskResponse>({}, 200);
   } catch (err) {
     console.error('Failed to check schedule', err);
+    return c.json<TaskResponse>({}, 500);
+  }
+});
+
+// Scheduler (cron): scrape the Earthquakes news site and post new articles.
+app.post('/internal/scheduler/post-news', async (c) => {
+  void (await c.req.json<TaskRequest>());
+  try {
+    await handlePostNews(context.subredditName);
+    return c.json<TaskResponse>({}, 200);
+  } catch (err) {
+    console.error('Failed to post news', err);
     return c.json<TaskResponse>({}, 500);
   }
 });

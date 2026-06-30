@@ -19,6 +19,7 @@
     "@devvit/public-api": "^0.13.5",
     "@devvit/web": "^0.13.5",
     "@hono/node-server": "1.19.14",
+    "cheerio": "1.2.0",
     "hono": "4.12.27"
   },
   "devDependencies": {

@@ -13,15 +13,26 @@ export const SETTING_KEYS = {
   flairPostMatch: 'flairPostMatch',
   flairMotm: 'flairMotm',
   flairTicket: 'flairTicket',
+  flairNews: 'flairNews',
   lockInactiveThreads: 'lockInactiveThreads',
   activeWindowDays: 'activeWindowDays',
+  newsBaseUrl: 'newsBaseUrl',
+  newsPath: 'newsPath',
+  newsMaxArticles: 'newsMaxArticles',
 } as const;
 
 /** A thread type that can be toggled on/off via the `createThreads` setting. */
-export type ThreadToggle = ThreadType | 'ticket';
+export type ThreadToggle = ThreadType | 'ticket' | 'news';
 
 /** All toggleable thread types, in display order (matches the setting options). */
-export const THREAD_TOGGLES: ThreadToggle[] = ['prematch', 'match', 'postmatch', 'motm', 'ticket'];
+export const THREAD_TOGGLES: ThreadToggle[] = [
+  'prematch',
+  'match',
+  'postmatch',
+  'motm',
+  'ticket',
+  'news',
+];
 
 /**
  * Whether a thread type is enabled for automatic creation. `selected` is the
@@ -44,6 +55,9 @@ export const DEFAULT_FLAIR: Record<ThreadType, string> = {
 
 /** Flair substring used to identify match-related threads when unstickying. */
 export const MATCH_FLAIR_KEYWORD = 'match';
+
+/** Fallback flair text for news link posts when the setting is blank. */
+export const DEFAULT_NEWS_FLAIR = 'Official Source';
 
 interface ThreadConfig {
   /** Prefix prepended to the event summary to build the title. */

@@ -25,6 +25,10 @@
         "endpoint": "/internal/scheduler/check-schedule",
         "cron": "*/1 * * * *"
       },
+      "post-news": {
+        "endpoint": "/internal/scheduler/post-news",
+        "cron": "*/5 * * * *"
+      },
       "post-thread": {
         "endpoint": "/internal/scheduler/post-thread"
       },
@@ -97,13 +101,14 @@
       "createThreads": {
         "type": "multiSelect",
         "label": "Auto-create these threads",
-        "helpText": "Which threads the bot creates automatically. Unselect a type to stop the bot posting it. Pre-match, match, post-match, and Man of the Match are per-match; the ticket thread is the monthly stickied thread.",
+        "helpText": "Which threads the bot creates automatically. Unselect a type to stop the bot posting it. Match threads are per-match; the ticket thread is the monthly stickied thread, and news posts are based on the latest articles from the official website.",
         "options": [
           { "label": "Pre-match threads", "value": "prematch" },
           { "label": "Match threads", "value": "match" },
           { "label": "Post-match threads", "value": "postmatch" },
           { "label": "Man of the Match threads", "value": "motm" },
-          { "label": "Monthly ticket thread", "value": "ticket" }
+          { "label": "Monthly ticket thread", "value": "ticket" },
+          { "label": "News article posts", "value": "news" }
         ],
         "defaultValue": ["prematch", "match", "postmatch", "motm", "ticket"]
       },
@@ -160,6 +165,30 @@
         "label": "Ticket thread flair text",
         "helpText": "Exact text of the link flair to apply to the monthly ticket thread.",
         "defaultValue": "Ticket Thread"
+      },
+      "flairNews": {
+        "type": "string",
+        "label": "News post flair text",
+        "helpText": "Exact text of the link flair to apply to news article posts.",
+        "defaultValue": "Official Source"
+      },
+      "newsBaseUrl": {
+        "type": "string",
+        "label": "News site base URL",
+        "helpText": "Base URL of the Earthquakes website (no trailing slash).",
+        "defaultValue": "https://www.sjearthquakes.com"
+      },
+      "newsPath": {
+        "type": "string",
+        "label": "News page path",
+        "helpText": "Path to the news listing page, appended to the base URL.",
+        "defaultValue": "/news"
+      },
+      "newsMaxArticles": {
+        "type": "number",
+        "label": "Max news articles per check",
+        "helpText": "How many of the most recent articles to consider each run. Defaults to 10.",
+        "defaultValue": 10
       }
     }
   },
