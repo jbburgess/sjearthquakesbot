@@ -97,7 +97,18 @@ describe('renderSummaryTable', () => {
     expect(lines[2]).toBe('| #11 Antony | 90 | 1 | 0 |');
     expect(lines[3]).toBe('| #9 Cristian Espinoza | 83 | 0 | 1 |');
     expect(lines[4]).toBe('| #20 Preston Judd | 10 | 0 | 0 |');
-    expect(table).toContain('*MIN = Minutes played, G = Goals, A = Assists.*');
+    expect(table).toContain('MIN = Minutes played');
+    expect(table).toContain('G = Goals');
+    expect(table).toContain('A = Assists');
+    expect(table).toContain('SH = Shots');
+    expect(table).toContain('SOG = Shots on goal');
+    expect(table).toContain('FC = Fouls committed');
+    expect(table).toContain('FA = Fouls suffered');
+    expect(table).toContain('OF = Offsides');
+    expect(table).toContain('YC = Yellow cards');
+    expect(table).toContain('RC = Red cards');
+    expect(table).toContain('SV = Saves');
+    expect(table).toContain('GA = Goals against');
   });
 
   test('substitutes 0 for a missing minutes value', () => {

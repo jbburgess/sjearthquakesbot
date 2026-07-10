@@ -98,7 +98,7 @@ export function renderSummaryTable(players: LineupPlayer[]): string {
 
   const legendParts = [
     `${MIN_COLUMN.abbr} = ${MIN_COLUMN.label}`,
-    ...columns.map((c) => `${c.abbr} = ${c.label}`),
+    ...STAT_COLUMNS.map((c) => `${c.abbr} = ${c.label}`),
   ];
   const legend = `*${legendParts.join(', ')}.*`;
 

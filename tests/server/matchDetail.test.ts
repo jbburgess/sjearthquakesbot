@@ -14,9 +14,9 @@ test('parses headline detail from a finished match summary', async () => {
   const detail = await fetchMatchDetail('401');
 
   expect(detail.competition).toBe('MLS');
-  expect(detail.venue).toBe('PayPal Park');
-  expect(detail.broadcast).toBe('MLS Season Pass');
-  expect(detail.referee).toBe('Jair Marrufo');
+  expect(detail.venue).toBe('PayPal Park (San Jose, California)');
+  expect(detail.broadcast).toBe('MLS Season Pass (Streaming)');
+  expect(detail.referee).toBe('Jair Marrufo (Referee), Corey Parker (Assistant Referee)');
   expect(detail.state).toBe('post');
   expect(detail.statusDetail).toBe('FT');
 });
@@ -90,4 +90,18 @@ test('parses a pre-match summary with records but no lineups or events', async (
 test('throws when the summary request fails', async () => {
   mockFetch([{ url: 'summary?event=', status: 404 }]);
   await expect(fetchMatchDetail('401')).rejects.toThrow(/ESPN summary request failed: 404/);
+});
+
+test('omits official role suffix when only one referee is listed', async () => {
+  const summarySingleOfficial = {
+    ...summaryPost,
+    gameInfo: {
+      ...summaryPost.gameInfo,
+      officials: [{ fullName: 'Jair Marrufo', position: { name: 'Referee' } }],
+    },
+  };
+  mockFetch([{ url: 'summary?event=', json: summarySingleOfficial }]);
+
+  const detail = await fetchMatchDetail('401');
+  expect(detail.referee).toBe('Jair Marrufo');
 });

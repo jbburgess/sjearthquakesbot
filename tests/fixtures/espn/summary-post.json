@@ -29,13 +29,13 @@
     ]
   },
   "gameInfo": {
-    "venue": { "fullName": "PayPal Park" },
+    "venue": { "fullName": "PayPal Park", "address": { "city": "San Jose, California" } },
     "officials": [
       { "fullName": "Jair Marrufo", "position": { "name": "Referee" } },
       { "fullName": "Corey Parker", "position": { "name": "Assistant Referee" } }
     ]
   },
-  "broadcasts": [{ "media": { "shortName": "MLS Season Pass" } }],
+  "broadcasts": [{ "media": { "shortName": "MLS Season Pass" }, "type": { "shortName": "STREAMING" } }],
   "rosters": [
     {
       "homeAway": "home",

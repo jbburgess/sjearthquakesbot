@@ -28,13 +28,14 @@ function render(template: string, vars: Record<string, string>): string {
   return out.replace(/\{\{[a-zA-Z]+\}\}/g, '').trimEnd() + '\n';
 }
 
+/** Format a player for display in a lineup or summary (e.g. "#10 John Doe (MF)") */
 function formatPlayer(player: LineupPlayer, escape = true): string {
   const hash = escape ? '\\#' : '#';
   const number = player.jersey ? `${hash}${player.jersey} ` : '';
   const suffix =
     player.subbedIn && player.subbedInAt
       ? ` (${player.subbedInAt})`
-      : player.position
+      : player.position && player.position.toUpperCase() !== 'SUB'
         ? ` (${player.position})`
         : '';
   return `${number}${player.name}${suffix}`;

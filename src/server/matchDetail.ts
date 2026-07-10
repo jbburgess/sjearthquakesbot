@@ -164,11 +164,14 @@ interface EspnOfficial {
 
 interface EspnSummaryResponse {
   header?: { league?: { name?: string }; competitions?: EspnHeaderCompetition[] };
-  gameInfo?: { venue?: { fullName?: string }; officials?: EspnOfficial[] };
+  gameInfo?: {
+    venue?: { fullName?: string; address?: { city?: string } };
+    officials?: EspnOfficial[];
+  };
   rosters?: EspnRoster[];
   keyEvents?: EspnKeyEvent[];
   lastFiveGames?: EspnLastFiveGames[];
-  broadcasts?: { media?: { shortName?: string } }[];
+  broadcasts?: { media?: { shortName?: string }; type?: { shortName?: string } }[];
 }
 
 /** Map ESPN's status state onto our MatchState, defaulting to `pre`. */
@@ -281,9 +284,26 @@ function isGenericDelay(line: MatchEventLine): boolean {
   return line.text.trim().toLowerCase() === type;
 }
 
+/** Normalize known all-caps broadcast type labels to their preferred display form. */
+function normalizeBroadcastType(type: string): string {
+  return type === 'STREAMING' ? 'Streaming' : type;
+}
+
 function findReferee(officials: EspnOfficial[] | undefined): string {
-  const ref = officials?.find((o) => o.position?.name === 'Referee') ?? officials?.[0];
-  return ref?.fullName ?? '';
+  if (!officials?.length) return '';
+  if (officials.length === 1) return officials[0]?.fullName ?? '';
+  return officials
+    .map((o) => (o.position?.name ? `${o.fullName} (${o.position.name})` : o.fullName ?? ''))
+    .filter(Boolean)
+    .join(', ');
+}
+
+/** Build a "Stadium (City)" venue string, omitting the city when unavailable. */
+function buildVenue(venue: { fullName?: string; address?: { city?: string } } | undefined): string {
+  const name = venue?.fullName ?? '';
+  const city = venue?.address?.city ?? '';
+  if (name && city) return `${name} (${city})`;
+  return name;
 }
 
 /**
@@ -308,8 +328,15 @@ export async function fetchMatchDetail(eventId: string): Promise<MatchDetail> {
   return {
     competition: body.header?.league?.name ?? '',
     kickoff: competition?.date ?? '',
-    venue: body.gameInfo?.venue?.fullName ?? '',
-    broadcast: body.broadcasts?.[0]?.media?.shortName ?? '',
+    venue: buildVenue(body.gameInfo?.venue),
+    broadcast: (body.broadcasts ?? [])
+      .filter((b) => b.media?.shortName)
+      .map((b) =>
+        b.type?.shortName
+          ? `${b.media!.shortName} (${normalizeBroadcastType(b.type.shortName)})`
+          : b.media!.shortName!
+      )
+      .join(', '),
     referee: findReferee(body.gameInfo?.officials),
     state: toMatchState(statusType?.state),
     statusDetail: statusType?.detail ?? statusType?.shortDetail ?? '',

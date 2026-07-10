@@ -22,6 +22,8 @@ export interface FetchRoute {
   url: string | RegExp | ((url: string) => boolean);
   /** Parsed JSON body returned from `response.json()`. */
   json?: unknown;
+  /** Raw body returned from `response.text()` (defaults to JSON-stringified `json`). */
+  text?: string;
   /** HTTP status (defaults to 200). */
   status?: number;
   /** Override `response.ok` (defaults to status in the 2xx range). */
@@ -59,6 +61,7 @@ export function mockFetch(routes: FetchRoute[]): MockInstance {
       status,
       statusText: ok ? 'OK' : 'Error',
       json: async () => route.json,
+      text: async () => route.text ?? JSON.stringify(route.json),
     } as Response;
   });
   return spy;
@@ -69,6 +72,7 @@ export interface FakePost {
   id: `t3_${string}`;
   title: string;
   stickied: boolean;
+  url: string;
   sticky: MockInstance;
   unsticky: MockInstance;
   lock: MockInstance;
@@ -83,6 +87,7 @@ export function makeFakePost(overrides: Partial<{ id: string; title: string; sti
     id,
     title: overrides.title ?? 'Test thread',
     stickied: overrides.stickied ?? false,
+    url: `https://reddit.com/${id}`,
     sticky: vi.fn(async () => {}),
     unsticky: vi.fn(async () => {}),
     lock: vi.fn(async () => {}),
@@ -105,6 +110,8 @@ export interface StubRedditOptions {
   newPosts?: unknown[];
   /** Comments returned by `getComments(...).all()`. */
   comments?: unknown[];
+  /** Mod actions returned by `getModerationLog(...).all()`. */
+  modLog?: unknown[];
   /** App user returned by `getAppUser()`. */
   appUser?: { id: string; username?: string } | undefined;
 }
@@ -118,6 +125,7 @@ export interface RedditStubs {
   getNewPosts: MockInstance;
   submitComment: MockInstance;
   getComments: MockInstance;
+  getModerationLog: MockInstance;
   getAppUser: MockInstance;
   /** Fake posts created by `submitPost`, in call order. */
   posts: FakePost[];
@@ -168,6 +176,10 @@ export function stubReddit(options: StubRedditOptions = {}): RedditStubs {
     all: async () => options.comments ?? [],
   } as never);
 
+  const getModerationLog = vi.spyOn(reddit, 'getModerationLog').mockReturnValue({
+    all: async () => options.modLog ?? [],
+  } as never);
+
   const getAppUser = vi
     .spyOn(reddit, 'getAppUser')
     .mockResolvedValue((options.appUser ?? { id: 't2_app', username: 'sjquakesbot' }) as never);
@@ -180,6 +192,7 @@ export function stubReddit(options: StubRedditOptions = {}): RedditStubs {
     getNewPosts,
     submitComment,
     getComments,
+    getModerationLog,
     getAppUser,
     posts,
     postsById,

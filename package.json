@@ -16,20 +16,27 @@
     "upload": "devvit upload"
   },
   "dependencies": {
-    "@devvit/public-api": "^0.13.5",
-    "@devvit/web": "^0.13.5",
+    "@devvit/public-api": "^0.13.7",
+    "@devvit/web": "^0.13.7",
     "@hono/node-server": "1.19.14",
+    "cheerio": "1.2.0",
     "hono": "4.12.27"
   },
   "devDependencies": {
-    "@devvit/start": "^0.13.5",
-    "@devvit/test": "^0.13.5",
+    "@devvit/start": "^0.13.7",
+    "@devvit/test": "^0.13.7",
     "@types/node": "22.18.0",
     "@vitest/coverage-v8": "^4.1.0",
-    "devvit": "^0.13.5",
+    "devvit": "^0.13.7",
     "typescript": "5.8.3",
     "vite": "8.1.0",
     "vitest": "^4.1.0"
+  },
+  "overrides": {
+    "protobufjs": "^7.6.3",
+    "tmp": "^0.2.4",
+    "tar": "^7.5.3",
+    "redis-memory-server": "0.17.0"
   },
   "license": "BSD-3-Clause"
 }

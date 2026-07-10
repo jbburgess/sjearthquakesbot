@@ -39,6 +39,14 @@ export type MatchEvent = {
   competition: string;
 };
 
+/** A news article scraped from the Earthquakes website, posted as a link post. */
+export interface NewsArticle {
+  /** Article headline, used as the Reddit post title. */
+  title: string;
+  /** Absolute article URL, used as the link post target. */
+  link: string;
+}
+
 /** Payload delivered to the `post-thread` scheduler endpoint. */
 export type PostThreadJobData = {
   event: MatchEvent;
