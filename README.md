@@ -73,8 +73,8 @@ Because this app uses HTTP fetch, Reddit requires a Terms and Conditions documen
 Privacy Policy.
 
 - **Privacy Policy** — [docs/privacy-policy.md](docs/privacy-policy.md)
-  ([Published](https://jonathanburgess.dev/redditbot-sjearthquakes/privacy-policy))
+  ([Published](https://jonathanburgess.dev/sjearthquakesbot/privacy-policy))
 - **Terms and Conditions** — [docs/terms-and-conditions.md](docs/terms-and-conditions.md)
-  ([Published](https://jonathanburgess.dev/redditbot-sjearthquakes/terms-and-conditions))
+  ([Published](https://jonathanburgess.dev/sjearthquakesbot/terms-and-conditions))
 
 The published URLs above are the ones supplied in the Devvit app details form.
