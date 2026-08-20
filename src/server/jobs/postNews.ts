@@ -7,10 +7,10 @@ import { fetchNewsArticles } from '../news';
 import { getFlairTemplateId } from '../reddit';
 
 const HOUR = 60 * 60 * 1000;
-/** Dedup markers live well past the time an article stays on the news page. */
-const TTL_MS = 7 * 24 * HOUR;
+/** Dedup markers outlast any realistic article recurrence window (~6 months). */
+const TTL_MS = 180 * 24 * HOUR;
 /** How many recent posts/removals to scan when checking for prior submissions. */
-const NEW_POSTS_LIMIT = 50;
+const NEW_POSTS_LIMIT = 100;
 const REMOVED_LIMIT = 20;
 
 /** Redis key marking an article as already posted, keyed by its URL. */
