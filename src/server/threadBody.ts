@@ -46,10 +46,11 @@ function renderTeamLineup(lineup: TeamLineup): string {
   const formation = lineup.formation ? ` (${lineup.formation})` : '';
   // Starters render in an indented code block (literal text, so jersey numbers
   // are unescaped); subs render inline where `#` must be escaped.
-  const xi = withFormationGraphic(
-    lineup.starters.map((p) => formatPlayer(p, false)),
-    lineup
-  ).join('\n    ');
+  // The formation graphic makes each starter's position redundant, so those
+  // lines drop the suffix to buy the width the graphic needs.
+  const starters = lineup.starters.map((p) => formatPlayer(p, false));
+  const compact = lineup.starters.map((p) => (p.jersey ? `#${p.jersey} ${p.name}` : p.name));
+  const xi = (withFormationGraphic(compact, lineup) ?? starters).join('\n    ');
   const subs = lineup.subs.map((p) => formatPlayer(p)).join(', ');
   let section = `**${lineup.teamName}${formation}**\n\n**Starting XI:**\n\n    ${xi || PLACEHOLDER}`;
   if (subs) section += `\n\n**Subs:** ${subs}`;

@@ -10,10 +10,14 @@ import type { LineupPlayer, TeamLineup } from './matchDetail';
 
 /** Markdown indent applied to every line of the starting-XI code block. */
 const INDENT = 4;
-/** Line budget before code blocks start scrolling horizontally on mobile. */
-const MAX_WIDTH = 72;
+/**
+ * Line budget for the whole block. The Reddit mobile app WRAPS long code-block
+ * lines instead of scrolling them, which mangles the layout, and it starts
+ * wrapping around 56 characters — so this stays well under that.
+ */
+const MAX_WIDTH = 54;
 /** Horizontal space each formation slot occupies. */
-const SLOT_WIDTH = 6;
+const SLOT_WIDTH = 4;
 /** Preferred blank space between the name column and the divider. */
 const DESIRED_GAP = 4;
 /** Smallest blank space allowed between the divider and the graphic. */
@@ -140,13 +144,17 @@ function rowLinePositions(rowCount: number, lineCount: number): number[] {
 /**
  * Append a formation graphic to the rendered starting-XI lines.
  *
- * Returns the lines unchanged when the formation is missing or inconsistent
- * with the lineup, or when the graphic cannot fit within the width budget.
+ * Returns undefined when the formation is missing or inconsistent with the
+ * lineup, or when the graphic cannot fit within the width budget, so the caller
+ * can fall back to a fuller plain-text list.
  */
-export function withFormationGraphic(nameLines: string[], lineup: TeamLineup): string[] {
-  const skip = (reason: string): string[] => {
+export function withFormationGraphic(
+  nameLines: string[],
+  lineup: TeamLineup
+): string[] | undefined {
+  const skip = (reason: string): undefined => {
     console.warn(`Skipping formation graphic for ${lineup.teamName}: ${reason}`);
-    return nameLines;
+    return undefined;
   };
 
   const formation = lineup.formation ?? '';
