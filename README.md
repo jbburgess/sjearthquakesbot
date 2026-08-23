@@ -2,11 +2,12 @@
 
 [![Test, Build, and Upload Devvit App (CI/CD)](https://github.com/jbburgess/redditbot-sjearthquakes/actions/workflows/devvit-cicd.yml/badge.svg?branch=master)](https://github.com/jbburgess/redditbot-sjearthquakes/actions/workflows/devvit-cicd.yml)
 
-> **NOTE:** This is a port of the Data API bot `u/SJEarthquakesBot` to the Devvit platform, as part of the Reddit App Migration Program.
-
-A mod bot for the San Jose Earthquakes subreddit (`r/SJEarthquakes`). It automatically manages
-the community's match-day threads, posts megathreads, and fosters discussion by monitoring and
+A mod bot for the San Jose Earthquakes subreddit (`r/SJEarthquakes`). It automatically posts and manages
+the community's match-day threads, megathreads, and stickies; and fosters discussion by monitoring and
 posting official news releases from the Quakes website.
+
+Ported to Devvit in 2026 from an earlier Python Data API bot operating under the same `u/SJEarthquakesBot`
+account starting in 2020.
 
 ## What it does
 
@@ -65,12 +66,4 @@ Requests to the following external domains are sent by this app:
 - `sjearthquakes.com` - Used to fetch club news and announcements directly from the official San Jose Earthquakes website for posting to the subreddit; preferred to ESPN as the primary source for official club news/releases.
 - `site.api.espn.com` - Used to fetch the team's schedule, fixtures, and live/post-match details (scores, events, lineups, and player performance stats) that populate every match thread. *(In the global allow list)*
 
-All requests to these domains are made server-side and are read-only (`HTTP GET`).
-
-## Legal
-
-Because this app uses HTTP fetch, Reddit requires a Terms and Conditions document and a
-Privacy Policy.
-
-- [**Privacy Policy**](https://jonathanburgess.dev/sjearthquakesbot/privacy-policy)
-- [**Terms and Conditions**](https://jonathanburgess.dev/sjearthquakesbot/terms-and-conditions)
+All requests to these domains are made server-side and are read-only (`HTTP GET`). No user data is collected, stored, or transmitted to any third-party service. The bot does not use any client-side scripts or make any requests from users' browsers. See the Privacy Policy for more information.
