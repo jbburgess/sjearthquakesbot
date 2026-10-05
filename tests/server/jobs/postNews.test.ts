@@ -30,6 +30,7 @@ test('posts new articles as link posts with the news flair', async () => {
   await handlePostNews('testsub');
 
   expect(stubs.submitPost).toHaveBeenCalledTimes(2);
+  expect(stubs.highlightedPosts).toEqual([]);
   expect(stubs.submitPost).toHaveBeenCalledWith(
     expect.objectContaining({
       title: 'Quakes sign new midfielder',
@@ -88,6 +89,18 @@ test('does not repost an article already marked in Redis', async () => {
 });
 
 const testDisabled = createDevvitTest({ settings: { ...baseSettings, createThreads: ['match'] } });
+
+const testHighlighted = createDevvitTest({ settings: { ...baseSettings, highlightSlotNews: 4 } });
+
+testHighlighted('news posts replace each other in their configured highlight slot', async () => {
+  mockFetch([{ url: '/news', text: NEWS }]);
+  const stubs = stubReddit({ flairTemplates: FLAIR });
+
+  await handlePostNews('testsub');
+
+  expect(stubs.posts[0].unhighlight).toHaveBeenCalledTimes(1);
+  expect(stubs.highlightedPosts.map((current) => current.id)).toEqual([stubs.posts[1].id]);
+});
 
 testDisabled('does nothing when news posting is disabled', async () => {
   const stubs = stubReddit({ flairTemplates: FLAIR });

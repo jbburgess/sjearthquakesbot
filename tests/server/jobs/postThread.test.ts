@@ -31,7 +31,8 @@ test('posts a pre-match thread: submit, flair, sticky, no NEW sort', async () =>
   expect(stubs.setPostFlair).toHaveBeenCalledWith(
     expect.objectContaining({ flairTemplateId: 'f-pre', postId: post.id })
   );
-  expect(post.sticky).toHaveBeenCalledWith(2);
+  expect(post.highlight).toHaveBeenCalledWith({ highlightLabelType: 'SHOW_POST_FLAIR' });
+  expect(post.sticky).not.toHaveBeenCalled();
   expect(post.setSuggestedCommentSort).not.toHaveBeenCalled();
 });
 
@@ -45,7 +46,7 @@ test('posts a match thread: NEW sort, remembers it, locks the prematch thread', 
 
   const post = stubs.posts[0];
   expect(post.setSuggestedCommentSort).toHaveBeenCalledWith('NEW');
-  expect(post.sticky).toHaveBeenCalledWith(2);
+  expect(post.highlight).toHaveBeenCalledWith({ highlightLabelType: 'SHOW_POST_FLAIR' });
   expect(await recallMatchPost('em')).toBe(post.id);
   expect(stubs.postsById.get('t3_pre')!.lock).toHaveBeenCalledTimes(1);
 });
@@ -62,7 +63,7 @@ test('posts a post-match thread and locks the match thread', async () => {
   expect(stubs.postsById.get('t3_match')!.lock).toHaveBeenCalledTimes(1);
 });
 
-test('posts a motm thread: not stickied, locks match, seeds player comments', async () => {
+test('posts a motm thread: highlighted, locks match, seeds player comments', async () => {
   const singlePlayer = structuredClone(summaryPost);
   const homeRoster = singlePlayer.rosters.find((r) => r.homeAway === 'home')!;
   homeRoster.roster = homeRoster.roster.filter((p) => p.athlete.displayName === 'Antony');
@@ -76,6 +77,7 @@ test('posts a motm thread: not stickied, locks match, seeds player comments', as
 
   const post = stubs.posts[0];
   expect(post.sticky).not.toHaveBeenCalled();
+  expect(post.highlight).toHaveBeenCalledWith({ highlightLabelType: 'SHOW_POST_FLAIR' });
   expect(post.setSuggestedCommentSort).toHaveBeenCalledWith('NEW');
   expect(stubs.postsById.get('t3_match2')!.lock).toHaveBeenCalledTimes(1);
   expect(stubs.submitComment).toHaveBeenCalledTimes(1);
