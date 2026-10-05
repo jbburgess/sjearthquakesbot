@@ -16,18 +16,18 @@
     "upload": "devvit upload"
   },
   "dependencies": {
-    "@devvit/public-api": "^0.14.1",
-    "@devvit/web": "^0.14.1",
+    "@devvit/public-api": "^0.14.7",
+    "@devvit/web": "^0.14.7",
     "@hono/node-server": "1.19.14",
     "cheerio": "1.2.0",
     "hono": "4.12.27"
   },
   "devDependencies": {
-    "@devvit/start": "^0.14.1",
-    "@devvit/test": "^0.14.1",
+    "@devvit/start": "^0.14.7",
+    "@devvit/test": "^0.14.7",
     "@types/node": "22.18.0",
     "@vitest/coverage-v8": "^4.1.0",
-    "devvit": "^0.14.1",
+    "devvit": "^0.14.7",
     "typescript": "5.8.3",
     "vite": "8.1.0",
     "vitest": "^4.1.0"
