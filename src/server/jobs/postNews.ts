@@ -4,7 +4,7 @@ import { reddit, redis, settings } from '@devvit/web/server';
 import type { NewsArticle } from '../../shared/types';
 import { DEFAULT_NEWS_FLAIR, isThreadEnabled, SETTING_KEYS } from '../../shared/config';
 import { fetchNewsArticles } from '../news';
-import { getFlairTemplateId } from '../reddit';
+import { getFlairTemplateId, highlightThread } from '../reddit';
 
 const HOUR = 60 * 60 * 1000;
 /** Dedup markers outlast any realistic article recurrence window (~6 months). */
@@ -54,7 +54,7 @@ async function postArticle(subredditName: string, article: NewsArticle): Promise
   const flairText =
     ((await settings.get<string>(SETTING_KEYS.flairNews)) ?? '').trim() || DEFAULT_NEWS_FLAIR;
   const flairId = await getFlairTemplateId(subredditName, flairText);
-  await reddit.submitPost({
+  const post = await reddit.submitPost({
     subredditName,
     title: article.title,
     url: article.link,
@@ -63,6 +63,7 @@ async function postArticle(subredditName: string, article: NewsArticle): Promise
   if (!flairId) {
     console.warn(`No flair template found for "${flairText}"; news post left unflaired`);
   }
+  await highlightThread(subredditName, post, 'news');
 }
 
 /**

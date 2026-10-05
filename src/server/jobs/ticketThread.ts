@@ -1,13 +1,13 @@
 /**
- * Monthly ticket thread: a season-long top-stickied post, replaced each month,
+ * Monthly ticket thread: a season-long highlighted post, replaced each month,
  * that points supporters at the official ticket marketplace and lists the
  * upcoming home matches for the month.
  *
  * Unlike the four per-match thread types, the ticket thread isn't tied to a
- * single event. It occupies the top sticky slot at all times during the season
- * (match threads use the bottom slot), and a new month's thread replaces the
+ * single event. It occupies its configured highlight position during the season
+ * (matchday and MOTM threads follow), and a new month's thread replaces the
  * previous one. Months with no home matches are skipped: the previous thread is
- * unstickied instead of being replaced, which gracefully covers offseason
+ * unhighlighted instead of being replaced, which gracefully covers offseason
  * months and long mid-season breaks (e.g. a World Cup break).
  */
 
@@ -15,7 +15,7 @@ import { redis, reddit, settings } from '@devvit/web/server';
 import ticketTemplate from '../templates/ticket.md?raw';
 import type { MatchEvent } from '../../shared/types';
 import { SETTING_KEYS, isThreadEnabled } from '../../shared/config';
-import { getFlairTemplateId } from '../reddit';
+import { getFlairTemplateId, highlightThread } from '../reddit';
 
 const HOUR = 60 * 60 * 1000;
 
@@ -28,11 +28,11 @@ const DEFAULT_TICKET_FLAIR = 'Ticket Thread';
 /**
  * How long after a match's kickoff it's assumed to have concluded. Used to time
  * the next month's thread so it posts only after the previous month's final
- * match wraps up (rather than at a fixed clock time).
+ * home match wraps up (rather than at a fixed clock time).
  */
 const MATCH_CONCLUSION_MS = 2.5 * HOUR;
 
-/** Redis key holding the post id of the currently-stickied ticket thread. */
+/** Redis key holding the post id of the currently-highlighted ticket thread. */
 const TICKET_LAST_POST_KEY = 'ticket:lastpostid';
 
 /** Markers/last-post id live comfortably past a single month. */
@@ -117,13 +117,15 @@ function homeMatchesInMonth(events: MatchEvent[], ym: YearMonth): MatchEvent[] {
 
 /**
  * When the ticket thread for month `ym` becomes due: after the previous month's
- * final match concludes, or — if the previous month had no matches — at the
- * start of `ym` (so a thread isn't posted more than a month early).
+ * final home match concludes, or — if the previous month had no home matches —
+ * at the start of `ym` (so a thread isn't posted more than a month early).
+ * Away matches don't gate the handover: the thread only lists home matches, so
+ * once the previous month's last home match is done its thread is stale.
  */
 function triggerTimeMs(ym: YearMonth, events: MatchEvent[]): number {
-  const prevMatches = matchesInMonth(events, addMonths(ym, -1));
-  if (prevMatches.length > 0) {
-    const lastKickoff = Math.max(...prevMatches.map((e) => Date.parse(e.start)));
+  const prevHomeMatches = homeMatchesInMonth(events, addMonths(ym, -1));
+  if (prevHomeMatches.length > 0) {
+    const lastKickoff = Math.max(...prevHomeMatches.map((e) => Date.parse(e.start)));
     return lastKickoff + MATCH_CONCLUSION_MS;
   }
   return startOfMonthMs(ym);
@@ -169,26 +171,25 @@ async function ticketEnabled(): Promise<boolean> {
 }
 
 /**
- * Unsticky the currently-tracked ticket thread, if any, and forget it. Returns
- * true if a thread was unstickied.
+ * Unhighlight the currently-tracked ticket thread, if any, and forget it.
  */
 async function unstickyCurrentTicket(): Promise<boolean> {
   const postId = await redis.get(TICKET_LAST_POST_KEY);
   if (!postId) return false;
   try {
     const post = await reddit.getPostById(postId as `t3_${string}`);
-    await post.unsticky();
-    console.info(`Unstickied previous ticket thread ${postId}`);
+    await post.unhighlight();
+    console.info(`Unhighlighted previous ticket thread ${postId}`);
   } catch (err) {
-    console.error(`Failed to unsticky previous ticket thread ${postId}`, err);
+    console.error(`Failed to unhighlight previous ticket thread ${postId}`, err);
+    throw err;
   }
   await redis.del(TICKET_LAST_POST_KEY);
   return true;
 }
 
 /**
- * Submit, flair, and top-sticky a ticket thread for `ym`, replacing any
- * previously-stickied ticket thread.
+ * Submit, flair, and optionally highlight a ticket thread, replacing the previous one.
  */
 async function postTicketThread(
   subredditName: string,
@@ -211,10 +212,10 @@ async function postTicketThread(
     console.warn(`No flair template found for "${flairText}"; ticket thread left unflaired`);
   }
 
-  // Replace the old top sticky with the new thread.
   await unstickyCurrentTicket();
-  await post.sticky(1);
-  console.info(`Stickied ticket thread "${title}" to the top slot`);
+  if (await highlightThread(subredditName, post, 'ticket')) {
+    console.info(`Highlighted ticket thread "${title}"`);
+  }
 
   await redis.set(TICKET_LAST_POST_KEY, post.id, {
     expiration: new Date(Date.now() + TICKET_TTL_MS),

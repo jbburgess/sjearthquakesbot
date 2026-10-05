@@ -3,7 +3,7 @@
 import { reddit, settings } from '@devvit/web/server';
 import type { PostThreadJobData } from '../../shared/types';
 import { THREAD_CONFIG, DEFAULT_FLAIR, buildTitle } from '../../shared/config';
-import { getFlairTemplateId } from '../reddit';
+import { getFlairTemplateId, highlightThread } from '../reddit';
 import { renderThreadBody } from '../threadBody';
 import { fetchMatchDetail } from '../matchDetail';
 import { resolveTeamId } from '../espn';
@@ -23,7 +23,7 @@ async function postMotmComments(eventId: string, postId: string): Promise<void> 
 }
 
 /**
- * Submit, flair, sort, and (optionally) sticky a match thread for the given
+ * Submit, flair, sort, and (optionally) highlight a match thread for the given
  * event and type.
  */
 export async function handlePostThread(
@@ -59,10 +59,8 @@ export async function handlePostThread(
     await post.setSuggestedCommentSort('NEW');
   }
 
-  // Sticky to the bottom slot (matches old `sticky(state=True, bottom=True)`).
-  if (cfg.sticky) {
-    await post.sticky(2);
-    console.info(`Stickied ${type} thread "${title}"`);
+  if (await highlightThread(subredditName, post, type)) {
+    console.info(`Highlighted ${type} thread "${title}"`);
   }
 
   // Lock the thread whose action window just closed, and seed MOTM nominations.
