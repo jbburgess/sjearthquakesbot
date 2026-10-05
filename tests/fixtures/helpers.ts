@@ -91,7 +91,7 @@ export function makeFakePost(overrides: Partial<{ id: string; title: string; sti
   return {
     id,
     title: overrides.title ?? 'Test thread',
-    authorName: 'sjearthquakesbot',
+    authorName: 'sjquakesbot',
     createdAt: overrides.createdAt ?? new Date(),
     stickied: overrides.stickied ?? false,
     url: `https://reddit.com/${id}`,
