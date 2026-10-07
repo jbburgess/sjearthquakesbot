@@ -25,11 +25,11 @@ account starting in 2020.
 - **Man of the Match threads** — posts a Man of the Match thread with a per-player
   performance summary table, then adds one nomination comment per player who featured so
   members can upvote their pick. The thread is kept tidy by removing stray top-level
-  comments during its active voting window.
+  comments during its active voting window, and highlighted behind the post-match thread.
 - **Monthly ticket threads** — posts and top-stickies a ticket thread each month that links
   to the official ticket marketplace and lists the month's home matches (with notes for cup
   ties or matches played away from PayPal Park). A new month's thread replaces the previous
-  one, posting after the prior month's final match concludes so the old thread stays useful
+  one, posting after the prior month's final home match concludes so the old thread stays useful
   until then, but users get as much lead time as possible for the first match of the next
   month. Months with no home matches are skipped, un-stickying the previous thread
   instead, so stale ticket threads aren't left up during the offseason and long mid-season breaks.
@@ -52,10 +52,11 @@ The bot exposes subreddit-level settings so moderators can tailor its behavior:
   match, post-match, Man of the Match, the monthly ticket thread, and news posts). Unselect
   a type to stop the bot posting it; mods can still post any thread manually from the subreddit menu.
 - The link flair to apply to each thread type.
+- Each thread type's assigned highlight slot (if any).
 - How many hours before kickoff the pre-match and match threads are posted.
 - Whether to lock each match thread once its active window has passed.
-- How many days to keep the post-match and Man of the Match threads active (stickied and
-  moderated) before they are un-stickied and locked.
+- How many days to keep the post-match and Man of the Match threads active (highlighted and
+  moderated) before their highlights are removed and they are locked (one day by default).
 - News posting controls, such as the news site URL, how many of the most recent articles
   to consider each check, and which flair to apply to news posts.
 

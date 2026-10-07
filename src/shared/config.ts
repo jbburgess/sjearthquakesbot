@@ -14,6 +14,12 @@ export const SETTING_KEYS = {
   flairMotm: 'flairMotm',
   flairTicket: 'flairTicket',
   flairNews: 'flairNews',
+  highlightSlotPreMatch: 'highlightSlotPreMatch',
+  highlightSlotMatch: 'highlightSlotMatch',
+  highlightSlotPostMatch: 'highlightSlotPostMatch',
+  highlightSlotMotm: 'highlightSlotMotm',
+  highlightSlotTicket: 'highlightSlotTicket',
+  highlightSlotNews: 'highlightSlotNews',
   lockInactiveThreads: 'lockInactiveThreads',
   activeWindowDays: 'activeWindowDays',
   newsBaseUrl: 'newsBaseUrl',
@@ -23,6 +29,24 @@ export const SETTING_KEYS = {
 
 /** A thread type that can be toggled on/off via the `createThreads` setting. */
 export type ThreadToggle = ThreadType | 'ticket' | 'news';
+
+export const HIGHLIGHT_SLOT_KEYS: Record<ThreadToggle, string> = {
+  prematch: SETTING_KEYS.highlightSlotPreMatch,
+  match: SETTING_KEYS.highlightSlotMatch,
+  postmatch: SETTING_KEYS.highlightSlotPostMatch,
+  motm: SETTING_KEYS.highlightSlotMotm,
+  ticket: SETTING_KEYS.highlightSlotTicket,
+  news: SETTING_KEYS.highlightSlotNews,
+};
+
+export const DEFAULT_HIGHLIGHT_SLOTS: Record<ThreadToggle, number> = {
+  prematch: 2,
+  match: 2,
+  postmatch: 2,
+  motm: 3,
+  ticket: 1,
+  news: 0,
+};
 
 /** All toggleable thread types, in display order (matches the setting options). */
 export const THREAD_TOGGLES: ThreadToggle[] = [
@@ -53,9 +77,6 @@ export const DEFAULT_FLAIR: Record<ThreadType, string> = {
   motm: 'Man of the Match',
 };
 
-/** Flair substring used to identify match-related threads when unstickying. */
-export const MATCH_FLAIR_KEYWORD = 'match';
-
 /** Fallback flair text for news link posts when the setting is blank. */
 export const DEFAULT_NEWS_FLAIR = 'Official Source';
 
@@ -64,8 +85,6 @@ interface ThreadConfig {
   titlePrefix: string;
   /** Setting key holding the flair text for this thread type. */
   flairKey: string;
-  /** Whether the thread should be stickied after posting. */
-  sticky: boolean;
   /** Whether the suggested comment sort should be set to "new". */
   sortNew: boolean;
   /** Whether to append the kickoff time to the title. */
@@ -77,28 +96,24 @@ export const THREAD_CONFIG: Record<ThreadType, ThreadConfig> = {
   prematch: {
     titlePrefix: 'Pre-Match Thread: ',
     flairKey: SETTING_KEYS.flairPreMatch,
-    sticky: true,
     sortNew: false,
     timeSuffix: true,
   },
   match: {
     titlePrefix: 'Match Thread: ',
     flairKey: SETTING_KEYS.flairMatch,
-    sticky: true,
     sortNew: true,
     timeSuffix: true,
   },
   postmatch: {
     titlePrefix: 'Post-Match Thread: ',
     flairKey: SETTING_KEYS.flairPostMatch,
-    sticky: true,
     sortNew: false,
     timeSuffix: false,
   },
   motm: {
     titlePrefix: 'Man of the Match: ',
     flairKey: SETTING_KEYS.flairMotm,
-    sticky: false,
     sortNew: true,
     timeSuffix: false,
   },

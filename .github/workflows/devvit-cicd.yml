@@ -1,4 +1,4 @@
-name: Test, Build, and Upload Devvit App (CI/CD)
+name: Test, Build, and Publish Devvit App (CI/CD)
 
 on:
   push:
@@ -90,7 +90,7 @@ jobs:
           retention-days: 14
 
   deploy:
-    name: Upload to Devvit
+    name: Publish to Devvit
     # Only deploy on direct pushes to master (not PRs/forks) after all checks pass.
     needs: [type-check, test, build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
@@ -119,8 +119,8 @@ jobs:
           printf '%s' "$DEVVIT_TOKEN" > "$HOME/.devvit/token"
           chmod 600 "$HOME/.devvit/token"
 
-      - name: Upload new app version
-        run: npm run upload
+      - name: Publish new app version
+        run: npx devvit publish
 
       - name: Scrub credentials
         if: always()

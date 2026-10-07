@@ -92,6 +92,23 @@ export async function markDone(eventId: string, action: ScheduleAction, now: num
   });
 }
 
+/**
+ * Atomically claim an action for an event via Redis `SET NX`, returning whether
+ * this call won the claim. Used instead of a check-then-markDone pair in
+ * {@link fireOnce} so two overlapping `handleCheckSchedule` runs (e.g. the next
+ * cron tick firing while a slow MOTM comment run is still draining its budget)
+ * can't both perform the same action.
+ */
+async function claimAction(eventId: string, action: ScheduleAction, now: number): Promise<boolean> {
+  // A failed NX set resolves to an empty string (no successful-set reply), not
+  // undefined, so check for that rather than falsy/undefined.
+  const result = await redis.set(dedupKey(eventId, action), '1', {
+    expiration: new Date(now + DEDUP_TTL_MS),
+    nx: true,
+  });
+  return result !== '';
+}
+
 /** Load the cached set of recently-active matches (empty if none/unparseable). */
 async function loadActiveMatches(): Promise<MatchEvent[]> {
   const raw = await redis.get(ACTIVE_MATCHES_KEY);
@@ -150,20 +167,26 @@ async function runAction(
   await handlePostThread(subredditName, { event, type: action });
 }
 
-/** Run an action at most once per event, marking it done and logging the outcome. */
+/**
+ * Run an action at most once per event. Claims the dedup key up front (rather
+ * than after the action completes) so a concurrent, overlapping schedule-check
+ * run can't slip past the "already done" check while this run is still in
+ * progress and duplicate the action (e.g. a slow MOTM comment drain).
+ */
 async function fireOnce(
   subredditName: string,
   event: MatchEvent,
   action: ScheduleAction,
   now: number
 ): Promise<void> {
-  if (await alreadyDone(event.id, action)) return;
+  if (!(await claimAction(event.id, action, now))) return;
   try {
     await runAction(subredditName, event, action);
-    await markDone(event.id, action, now);
     console.info(`Ran "${action}" for ${event.summary} (${event.id})`);
   } catch (err) {
     console.error(`Failed "${action}" for ${event.summary} (${event.id})`, err);
+    // Release the claim so a later tick can retry the action.
+    await redis.del(dedupKey(event.id, action));
   }
 }
 

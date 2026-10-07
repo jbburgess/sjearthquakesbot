@@ -95,13 +95,13 @@
       "teamId": {
         "type": "number",
         "label": "ESPN team ID",
-        "helpText": "ESPN soccer team ID whose schedule the bot follows (191 = San Jose Earthquakes).",
+        "helpText": "ESPN soccer team ID whose schedule the bot follows for ticket and matchday threads (191 = San Jose Earthquakes).",
         "defaultValue": 191
       },
       "createThreads": {
         "type": "multiSelect",
-        "label": "Auto-create these threads",
-        "helpText": "Which threads the bot creates automatically. Unselect a type to stop the bot posting it. Match threads are per-match; the ticket thread is the monthly stickied thread, and news posts are based on the latest articles from the official website.",
+        "label": "Auto-created thread types",
+        "helpText": "Which types of threads/posts the bot creates automatically. Unselect a type to stop the bot posting it. Match threads are per-match; the ticket thread is the monthly stickied thread, and news posts are the latest articles from the official website.",
         "options": [
           { "label": "Pre-match threads", "value": "prematch" },
           { "label": "Match threads", "value": "match" },
@@ -111,6 +111,42 @@
           { "label": "News article posts", "value": "news" }
         ],
         "defaultValue": ["prematch", "match", "postmatch", "motm", "ticket"]
+      },
+      "highlightSlotPreMatch": {
+        "type": "number",
+        "label": "Pre-match highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 2
+      },
+      "highlightSlotMatch": {
+        "type": "number",
+        "label": "Match highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 2
+      },
+      "highlightSlotPostMatch": {
+        "type": "number",
+        "label": "Post-match highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 2
+      },
+      "highlightSlotMotm": {
+        "type": "number",
+        "label": "Man of the Match highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 3
+      },
+      "highlightSlotTicket": {
+        "type": "number",
+        "label": "Ticket highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 1
+      },
+      "highlightSlotNews": {
+        "type": "number",
+        "label": "News highlight slot",
+        "helpText": "0 disables highlighting; 1-6 assigns a slot. New posts replace existing highlights assigned to the same slot. Highlight removed at the end of the active window.",
+        "defaultValue": 0
       },
       "prematchLeadHours": {
         "type": "number",

@@ -71,25 +71,35 @@ export function mockFetch(routes: FetchRoute[]): MockInstance {
 export interface FakePost {
   id: `t3_${string}`;
   title: string;
+  authorName: string;
+  createdAt: Date;
   stickied: boolean;
   url: string;
   sticky: MockInstance;
   unsticky: MockInstance;
+  highlight: MockInstance;
+  isHighlighted: MockInstance;
+  unhighlight: MockInstance;
   lock: MockInstance;
   setSuggestedCommentSort: MockInstance;
   edit: MockInstance;
 }
 
 /** Build a fake Post with spied mutators. */
-export function makeFakePost(overrides: Partial<{ id: string; title: string; stickied: boolean }> = {}): FakePost {
+export function makeFakePost(overrides: Partial<{ id: string; title: string; stickied: boolean; createdAt: Date }> = {}): FakePost {
   const id = (overrides.id ?? `t3_${Math.random().toString(36).slice(2, 9)}`) as `t3_${string}`;
   return {
     id,
     title: overrides.title ?? 'Test thread',
+    authorName: 'sjquakesbot',
+    createdAt: overrides.createdAt ?? new Date(),
     stickied: overrides.stickied ?? false,
     url: `https://reddit.com/${id}`,
     sticky: vi.fn(async () => {}),
     unsticky: vi.fn(async () => {}),
+    highlight: vi.fn(async () => {}),
+    isHighlighted: vi.fn(async () => false),
+    unhighlight: vi.fn(async () => {}),
     lock: vi.fn(async () => {}),
     setSuggestedCommentSort: vi.fn(async () => {}),
     edit: vi.fn(async () => {}),
@@ -114,6 +124,7 @@ export interface StubRedditOptions {
   modLog?: unknown[];
   /** App user returned by `getAppUser()`. */
   appUser?: { id: string; username?: string } | undefined;
+  highlightedPosts?: FakePost[];
 }
 
 /** The set of spies installed by {@link stubReddit}, for assertions. */
@@ -127,6 +138,9 @@ export interface RedditStubs {
   getComments: MockInstance;
   getModerationLog: MockInstance;
   getAppUser: MockInstance;
+  getHighlightedPosts: MockInstance;
+  reorderHighlightedPosts: MockInstance;
+  highlightedPosts: FakePost[];
   /** Fake posts created by `submitPost`, in call order. */
   posts: FakePost[];
   /** Look up (or lazily create) the fake post a `getPostById` call returns. */
@@ -143,9 +157,35 @@ export interface RedditStubs {
 export function stubReddit(options: StubRedditOptions = {}): RedditStubs {
   const posts: FakePost[] = [];
   const postsById = new Map<string, FakePost>();
+  const highlightedPosts = [...(options.highlightedPosts ?? [])];
+  const attachHighlights = (post: FakePost): void => {
+    post.isHighlighted.mockImplementation(async () => highlightedPosts.some((current) => current.id === post.id));
+    post.highlight.mockImplementation(async () => {
+      if (!highlightedPosts.some((current) => current.id === post.id)) highlightedPosts.push(post);
+    });
+    post.unhighlight.mockImplementation(async () => {
+      const index = highlightedPosts.findIndex((current) => current.id === post.id);
+      if (index >= 0) highlightedPosts.splice(index, 1);
+    });
+  };
+  for (const post of highlightedPosts) {
+    postsById.set(post.id, post);
+    attachHighlights(post);
+  }
+  const getHighlightedPosts = vi.fn(async () => highlightedPosts.map((post) => ({ postId: post.id })));
+  const reorderHighlightedPosts = vi.fn(async (postIds: readonly string[]) => {
+    const reordered = postIds.map((postId) => highlightedPosts.find((post) => post.id === postId)!);
+    highlightedPosts.splice(0, highlightedPosts.length, ...reordered);
+  });
+  vi.spyOn(reddit, 'getSubredditByName').mockResolvedValue({
+    getHighlightedPosts,
+    reorderHighlightedPosts,
+  } as never);
+  vi.spyOn(reddit, 'getSubredditInfoByName').mockResolvedValue({ name: 'testsub' });
 
   const submitPost = vi.spyOn(reddit, 'submitPost').mockImplementation((async (opts: { title?: string }) => {
     const post = makeFakePost({ title: opts?.title });
+    attachHighlights(post);
     posts.push(post);
     postsById.set(post.id, post);
     return post as unknown as Post;
@@ -155,6 +195,7 @@ export function stubReddit(options: StubRedditOptions = {}): RedditStubs {
     let post = postsById.get(id);
     if (!post) {
       post = makeFakePost({ id });
+      attachHighlights(post);
       postsById.set(id, post);
     }
     return post as unknown as Post;
@@ -194,6 +235,9 @@ export function stubReddit(options: StubRedditOptions = {}): RedditStubs {
     getComments,
     getModerationLog,
     getAppUser,
+    getHighlightedPosts,
+    reorderHighlightedPosts,
+    highlightedPosts,
     posts,
     postsById,
   };
