@@ -1,4 +1,4 @@
-name: Test, Build, and Upload Devvit App (CI/CD)
+name: Test and Build Devvit App
 
 on:
   push:
@@ -88,40 +88,3 @@ jobs:
           name: server-bundle
           path: dist/
           retention-days: 14
-
-  deploy:
-    name: Upload to Devvit
-    # Only deploy on direct pushes to master (not PRs/forks) after all checks pass.
-    needs: [type-check, test, build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    environment: Production
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Authenticate Devvit CLI
-        env:
-          DEVVIT_TOKEN: ${{ secrets.DEVVIT_TOKEN }}
-        run: |
-          if [ -z "$DEVVIT_TOKEN" ]; then
-            echo "::error::DEVVIT_TOKEN secret is not set; cannot upload to Devvit."
-            exit 1
-          fi
-          mkdir -p "$HOME/.devvit"
-          printf '%s' "$DEVVIT_TOKEN" > "$HOME/.devvit/token"
-          chmod 600 "$HOME/.devvit/token"
-
-      - name: Upload new app version
-        run: npm run upload
-
-      - name: Scrub credentials
-        if: always()
-        run: rm -f "$HOME/.devvit/token"
